@@ -18,11 +18,11 @@ services:
     networks:
       - sparta-net
 
-  #Redis (JWT Refresh Token + 허브/경로 캐싱)
+  # Redis (JWT Refresh Token + 허브/경로 캐싱)
   redis:
     image: redis:7.2
     container_name: sparta-redis
-    command: redis-server /user/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
     ports:
       - "6379:6379"
     volumes:
@@ -31,21 +31,21 @@ services:
     networks:
       - sparta-net
 
-  #Kafka + Zookeeper
+  # TODO: Kafka 서비스 블록을 추가해야 합니다.
+
+  # Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     container_name: sparta-zookeeper
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
     networks:
       - sparta-net
 
-  #Zipkin
+  # Zipkin
   zipkin:
     image: openzipkin/zipkin:3
     container_name: sparta-zipkin

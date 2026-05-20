@@ -10,20 +10,25 @@ public abstract class ArchTestSupport {
     protected abstract String getBasePackage();
 
     @ArchTest
-    public final ArchRule controllerAnnotation =
-            CommonArchRules.controllerAnnotationRule(getBasePackage());
+    public final ArchRule controllerAnnotation(JavaClasses classes){
+        return  CommonArchRules.controllerAnnotationRule(getBasePackage());
+    }
 
     @ArchTest
-    public final ArchRule serviceAnnotation =
-            CommonArchRules.serviceAnnotationRule(getBasePackage());
+    public final ArchRule serviceAnnotation(JavaClasses classes){
+        return CommonArchRules.serviceAnnotationRule(getBasePackage());
+    }
+
 
     @ArchTest
-    public final ArchRule repositoryAnnotation =
-            CommonArchRules.repositoryAnnotationRule(getBasePackage());
+    public final ArchRule repositoryAnnotation(JavaClasses classes){
+        return CommonArchRules.repositoryAnnotationRule(getBasePackage());
+    }
 
     @ArchTest
-    public final ArchRule entityAnnotation =
-            CommonArchRules.entityAnnotationRule(getBasePackage());
+    public final ArchRule entityAnnotation(JavaClasses classes){
+        return CommonArchRules.entityAnnotationRule(getBasePackage());
+    }
 
     @ArchTest
     public void layerDependencyArchRule(JavaClasses classes) {

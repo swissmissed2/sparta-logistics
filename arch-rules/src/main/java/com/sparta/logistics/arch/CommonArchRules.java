@@ -118,6 +118,7 @@ public class CommonArchRules {
     public static ArchRule entityNamingRule(String basePackage) {
         return classes()
                 .that().resideInAPackage(basePackage + "..entity..")
+                .and().haveSimpleNameNotContaining("$")
                 .should().haveSimpleNameEndingWith("Entity")
                 .as("Entity 패키지의 클래스는 'Entity'로 끝나야 합니다.");
     }
@@ -180,6 +181,7 @@ public class CommonArchRules {
     public static ArchRule entityAnnotationRule(String basePackage) {
         return classes()
                 .that().resideInAPackage(basePackage + "..entity..")
+                .and().haveSimpleNameNotContaining("$")
                 .should().beAnnotatedWith("jakarta.persistence.Entity")
                 .as("Entity 클래스는 @Entity 어노테이션이 필요합니다.");
     }

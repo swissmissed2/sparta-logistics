@@ -39,6 +39,23 @@ subprojects {
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
 
+    //공통 모듈(:common)
+    configure(subprojects.findAll {
+        it.name != 'common' &&
+                it.name != 'api-gateway' &&
+                it.name != 'discovery-server' &&
+                it.name != 'config-server' &&
+                it.name != 'arch-rules'
+    }) {
+        dependencies {
+            // 여기에 속한 도메인 모듈(order, user, product, slack 등)은 자동으로 common을 참조
+            //ArchUnit 적용
+            implementation project(':common')
+            testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+            testImplementation project(':arch-rules')
+        }
+    }
+
     test {
         useJUnitPlatform()
     }

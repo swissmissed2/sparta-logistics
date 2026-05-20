@@ -8,8 +8,8 @@ spring:
     config:
       server:
         git:
-          uri: ##
-          default-label: main # 기본 브랜치 지정
+          uri: #
+          default-label: dev # 기본 브랜치 지정
 eureka:
   client:
     service-url:
