@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Builder
+//@Builder
 @Table(name="p_user")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -47,46 +47,46 @@ public class UserEntity extends BaseEntity {
 
     private LocalDateTime last_login_at; // 마지막 로그인 일시
 
-    @Builder
-    public UserEntity(String username, String password, String name, String email,
-                      String slackId, UserRole role, UserStatus status, UUID hubId, UUID companyId) {
+//    @Builder
+//    public UserEntity(String username, String password, String name, String email,
+//                      String slackId, UserRole role, UserStatus status, UUID hubId, UUID companyId) {
+//
+//        this.username = username;
+//        this.password = password;
+//        this.name = name;
+//        this.email = email;
+//        this.slackId = slackId;
+//        this.role = role;
+//        this.status = status;
+//        this.hubId = hubId;
+//        this.companyId = companyId;
+//        this.last_login_at = LocalDateTime.now();
+//
+//        validateRoleConstraints();
+//    }
 
-        this.username = username;
-        this.password = password;
-        this.name = name;
-        this.email = email;
-        this.slackId = slackId;
-        this.role = role;
-        this.status = status;
-        this.hubId = hubId;
-        this.companyId = companyId;
-        this.last_login_at = LocalDateTime.now();
-
-        validateRoleConstraints();
-    }
-
-    public void validateRoleConstraints() {
-        if (this.role == null) return;
-
-        switch (this.role) {
-            case HUB_MANAGER:
-            case DELIVERY_MANAGER:
-                if (this.hubId == null) {
-                    throw new IllegalArgumentException(this.role + "은(는) hubId가 필수입니다.");
-                }
-                break;
-            case COMPANY_MANAGER:
-                if (this.companyId == null) {
-                    throw new IllegalArgumentException(this.role + "은(는) companyId가 필수입니다.");
-                }
-                break;
-            case MASTER:
-                if (this.hubId != null || this.companyId != null) {
-                    throw new IllegalArgumentException("MASTER는 hubId와 companyId를 가질 수 없습니다.");
-                }
-                break;
-        }
-    }
+//    public void validateRoleConstraints() {
+//        if (this.role == null) return;
+//
+//        switch (this.role) {
+//            case HUB_MANAGER:
+//            case DELIVERY_MANAGER:
+//                if (this.hubId == null) {
+//                    throw new IllegalArgumentException(this.role + "은(는) hubId가 필수입니다.");
+//                }
+//                break;
+//            case COMPANY_MANAGER:
+//                if (this.companyId == null) {
+//                    throw new IllegalArgumentException(this.role + "은(는) companyId가 필수입니다.");
+//                }
+//                break;
+//            case MASTER:
+//                if (this.hubId != null || this.companyId != null) {
+//                    throw new IllegalArgumentException("MASTER는 hubId와 companyId를 가질 수 없습니다.");
+//                }
+//                break;
+//        }
+//    }
 
 
 }

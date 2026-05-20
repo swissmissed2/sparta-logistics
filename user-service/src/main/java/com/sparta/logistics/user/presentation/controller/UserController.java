@@ -1,4 +1,4 @@
-package com.sparta.logistics.user.controller;
+package com.sparta.logistics.user.presentation.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
