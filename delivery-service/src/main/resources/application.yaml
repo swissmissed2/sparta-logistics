@@ -9,8 +9,8 @@ spring:
   datasource:
     # schema_delivery 설정
     url: jdbc:postgresql://localhost:5432/logistics?currentSchema=schema_delivery
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -35,15 +35,7 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     instance-id: ${spring.application.name}:${server.port}:${random.value}
-    prefer-ip-address: true # 서비스 간 통신 시 호스트명 대신 IP 주소를 사용하도록 강제 (네트워크 에러 방지)
-
-
-#management:
-#  tracing:
-#    sampling:
-#      probability: 1.0
-#  zipkin:
-#    base-url: http://localhost:9411/
+    prefer-ip-address: true
 
 springdoc:
   api-docs:
