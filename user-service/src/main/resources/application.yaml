@@ -1,14 +1,46 @@
 server:
-  port: 0 #8083에서 0으로 변경 (랜덤 포트 할당)
+  port: 19091
 
 spring:
   application:
     name: user-service
 
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}?currentSchema=schema_user
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
-  #유레카에 등록될 때 각각의 랜덤 포트 서버들을 구별하기 위한 고유 ID 설정
+
   instance:
-    instance-id: ${spring.application.name}:${spring.instance_id:${random.values}}
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] "
+  include-application-name: false
