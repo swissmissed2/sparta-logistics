@@ -1,6 +1,11 @@
 package com.sparta.logistics.delivery.entity;
 
 public enum DeliveryStatus {
-    // TODO: 배송 상태 상수 정의
-
+    CREATED,
+    HUB_WAITING,
+    HUB_MOVING,
+    DESTINATION_HUB_ARRIVED,
+    OUT_FOR_DELIVERY,
+    COMPLETED,
+    CANCELLED;
 }

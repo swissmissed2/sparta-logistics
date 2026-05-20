@@ -2,7 +2,7 @@ plugins {
     id 'org.springframework.boot'
 }
 
-description = 'company-service'
+description = 'delivery-service'
 
 dependencies {
     implementation project(':common')
@@ -10,4 +10,5 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
 }
