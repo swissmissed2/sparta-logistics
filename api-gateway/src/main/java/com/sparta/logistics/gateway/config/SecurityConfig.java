@@ -2,12 +2,14 @@ package com.sparta.logistics.gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
 @EnableWebFluxSecurity // 안써줘도 자동 생성되지만 가독성을 위해 표기하는 걸 추천
+@EnableMethodSecurity // @PreAuthorize 사용 가능
 public class SecurityConfig {
 
     @Bean
