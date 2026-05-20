@@ -1,42 +1,18 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.14'
+    // 루트에서 apply false로 해두었으니, 실행 파일인 여기서는 플러그인을 활성화합니다.
+    id 'org.springframework.boot'
 }
 
 description = 'config-server'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
-ext {
-    set('springCloudVersion', "2025.0.2")
-}
-
 dependencies {
+    // 1. 모니터링 및 기본 웹 기능
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 2. Config Server 핵심 기능
     implementation 'org.springframework.cloud:spring-cloud-config-server'
+
+    // 3. 유레카 클라이언트 연동
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testCompileOnly 'org.projectlombok:lombok'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testAnnotationProcessor 'org.projectlombok:lombok'
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
 }

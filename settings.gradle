@@ -12,10 +12,11 @@ include 'arch-rules'
 
 //마이크로서비스
 include 'user-service'
-//include 'hub-service'
+include 'hub-service'
 include 'company-service'
-//include 'product=service'
+//include 'product-service'
 include 'order-service'
+include 'slack-service'
 include 'delivery-service'
-//include 'slack-service'
+
 

@@ -1,0 +1,35 @@
+# 1. 기본 설정: Git이 알아서 텍스트 파일의 줄바꿈(Line Ending)을 통일(LF)하도록 설정
+* text=auto
+
+# 2. 명시적 텍스트 파일: 항상 텍스트로 취급할 확장자들
+*.java text
+*.xml text
+*.yml text
+*.yaml text
+*.properties text
+*.md text
+*.txt text
+*.gradle text
+*.sql text
+.gitignore text
+.gitattributes text
+
+# 3. 윈도우용 실행 파일: 항상 CRLF(윈도우식 줄바꿈) 유지
+*.bat text eol=crlf
+
+# 4. 맥/리눅스용 실행 파일: 항상 LF(유닉스식 줄바꿈) 강제 유지
+*.sh text eol=lf
+gradlew text eol=lf
+
+# 5. 바이너리 파일: 텍스트가 아니므로 Git이 줄바꿈 변환 등을 절대 건드리지 않도록 보호
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.class binary
+*.jar binary
+*.war binary
+*.zip binary
+*.tar.gz binary

@@ -1,49 +1,13 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.14'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot'
 }
 
-group = 'com.sparta.logistics'
-version = '0.0.1-SNAPSHOT'
 description = 'delivery-service'
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-repositories {
-	mavenCentral()
-}
-
-
 dependencies {
-	// ArchUnit 테스트 의존성
-	testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
-	// 공통 규칙 모듈 참조 (테스트 스코프)
-	testImplementation project(':arch-rules')
-
+	implementation project(':common')
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	runtimeOnly 'org.postgresql:postgresql'
-	testCompileOnly 'org.projectlombok:lombok'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	testAnnotationProcessor 'org.projectlombok:lombok'
-}
-
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
 }

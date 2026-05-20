@@ -1,0 +1,13 @@
+plugins {
+    id 'org.springframework.boot'
+}
+
+description = 'slack-service'
+
+dependencies {
+    // 1. 웹(Controller) 기능
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 2. 유레카 클라이언트
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+}

@@ -4,12 +4,13 @@ server:
 spring:
   application:
     name: config-server
+  profiles:
+    active: native
   cloud:
     config:
       server:
-        git:
-          uri: ##
-          default-label: main # 기본 브랜치 지정
+        native:
+          search-locations: file:./config-repo
 eureka:
   client:
     service-url:

@@ -1,64 +1,31 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.14'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot'
 }
 
-group = 'com.nullpointer.msa'
-version = '0.0.1-SNAPSHOT'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-repositories {
-	mavenCentral()
-}
-
+description = 'gateway-server'
 
 dependencies {
-	// ArchUnit 테스트 의존성
-	testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
-	// 공통 규칙 모듈 참조 (테스트 스코프)
-	testImplementation project(':arch-rules')
-
-	implementation(project(':common'))
+	// 공통 모듈 참조
+	implementation(project(':common')) {
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-web'
+	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webmvc'
+}
 
 	// Spring Cloud Gateway
-	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
-
-	// 서비스 디스커버리
+	implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
-	// 보안 및 인증
+	// 보안 및 인증 (JWT)
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
-	// zipkin
+	// 모니터링 및 분산 추적 (Actuator, Zipkin)
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
-	// Lombok
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-
-	// Test
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// WebFlux(Reactor) 테스트용 (게이트웨이는 WebFlux 기반)
 	testImplementation 'io.projectreactor:reactor-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
 }

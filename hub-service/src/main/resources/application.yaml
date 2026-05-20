@@ -1,0 +1,21 @@
+server:
+  port: 19092
+
+spring:
+  application:
+    name: hub-service
+  config:
+    import: optional:configserver:http://localhost:8888
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}?currentSchema=schema_hub
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        default_schema: schema_hub
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${server.port}

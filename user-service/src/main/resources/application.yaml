@@ -1,5 +1,5 @@
 server:
-  port: 0 #8083에서 0으로 변경 (랜덤 포트 할당)
+  port: 19091
 
 spring:
   application:

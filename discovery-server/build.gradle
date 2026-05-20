@@ -1,35 +1,13 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.14'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot'
 }
 
-group = 'com.nullpointer.msa'
-version = '0.0.1-SNAPSHOT'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-repositories {
-	mavenCentral()
-}
+description = 'discovery-server'
 
 dependencies {
+	// 1. 모니터링 기능
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// 2. 유레카 서버 핵심 기능
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
 }
