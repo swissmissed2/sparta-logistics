@@ -18,7 +18,7 @@ public class DeliveryService {
     @Transactional(readOnly = true)
     public DeliveryDetailResponse getDelivery(UUID deliveryId) {
 
-        // 추후 에러 코드 활용하여 수정
+        // TODO: 공통 예외 처리 통일
         if (deliveryId == null) {
             throw new IllegalArgumentException("배송 ID는 필수 입력 값입니다.");
         }
