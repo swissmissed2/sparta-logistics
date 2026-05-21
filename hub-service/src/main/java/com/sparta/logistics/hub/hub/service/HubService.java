@@ -8,6 +8,8 @@ import com.sparta.logistics.hub.hub.dto.response.*;
 import com.sparta.logistics.hub.hub.entity.Hub;
 import com.sparta.logistics.hub.hub.enums.HubStatus;
 import com.sparta.logistics.hub.hub.repository.HubRepository;
+import com.sparta.logistics.hub.hubroute.entity.HubRoute;
+import com.sparta.logistics.hub.hubroute.repository.HubRouteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,6 +25,7 @@ import java.util.UUID;
 public class HubService {
 
     private final HubRepository hubRepository;
+    private final HubRouteRepository hubRouteRepository;
 
 
     @Transactional
@@ -103,8 +107,10 @@ public class HubService {
     public HubDeleteResponse deleteHub(UUID hubId, UUID userId) {
 
         Hub hub = findByHubId(hubId);
-
         hub.delete(userId);
+
+        List<HubRoute> routes = hubRouteRepository.findAllByHubAndDeletedAtIsNull(hub);
+        routes.forEach(route -> route.delete(userId));
 
         return HubDeleteResponse.from(hub);
     }
