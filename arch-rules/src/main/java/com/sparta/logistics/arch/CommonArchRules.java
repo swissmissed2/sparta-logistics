@@ -69,7 +69,7 @@ public class CommonArchRules {
         if (hasRequestDto) {
             rule = rule
                     .layer("DTO-Request").definedBy(basePackage + "..dto..request..")
-                    .whereLayer("DTO-Request").mayOnlyBeAccessedByLayers("Controller");
+                    .whereLayer("DTO-Request").mayOnlyBeAccessedByLayers("Controller", "Service");
         }
 
         // ResponseDto 패키지가 있을 때만 레이어 추가

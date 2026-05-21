@@ -5,6 +5,7 @@ dependencies {
     // JPA (BaseEntity, Auditing)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     // Feign Interceptor (서비스 간 통신 시 헤더 전달용)
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'

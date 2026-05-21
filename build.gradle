@@ -44,13 +44,7 @@ subprojects {
     }
 
     //공통 모듈(:common)
-    configure(subprojects.findAll {
-        it.name != 'common' &&
-                it.name != 'api-gateway' &&
-                it.name != 'discovery-server' &&
-                it.name != 'config-server' &&
-                it.name != 'arch-rules'
-    }) {
+    if (!['common', 'api-gateway', 'discovery-server', 'config-server', 'arch-rules'].contains(it.name)) {
         dependencies {
             // 여기에 속한 도메인 모듈(order, user, product, slack 등)은 자동으로 common을 참조
             //ArchUnit 적용

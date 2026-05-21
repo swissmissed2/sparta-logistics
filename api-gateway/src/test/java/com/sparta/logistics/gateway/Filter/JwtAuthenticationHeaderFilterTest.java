@@ -37,8 +37,6 @@ import java.util.List;
 
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationHeaderFilterTest {
@@ -100,7 +98,7 @@ class JwtAuthenticationHeaderFilterTest {
 
         Jwt jwt = mock(Jwt.class);
         when(jwt.getSubject()).thenReturn("550e8400-e29b-41d4-a716-446655440000");
-        when(jwt.getClaimAsString("authorities")).thenReturn("MASTER");
+        when(jwt.getClaimAsString("auth")).thenReturn("MASTER");
         when(jwtDecoder.decode(token)).thenReturn(Mono.just(jwt));
 
         GatewayFilterChain chain = mock(GatewayFilterChain.class);

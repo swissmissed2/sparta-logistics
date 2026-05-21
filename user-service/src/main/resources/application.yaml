@@ -4,11 +4,20 @@ server:
 spring:
   application:
     name: user-service
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}?currentSchema=schema_user
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        default_schema: schema_user
 
 eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  #유레카에 등록될 때 각각의 랜덤 포트 서버들을 구별하기 위한 고유 ID 설정
   instance:
-    instance-id: ${spring.application.name}:${spring.instance_id:${random.values}}
+    instance-id: ${spring.application.name}:${server.port}
