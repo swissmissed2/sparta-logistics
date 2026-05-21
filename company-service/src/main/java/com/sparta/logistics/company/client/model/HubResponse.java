@@ -1,4 +1,4 @@
-package com.sparta.logistics.company.client.dto;
+package com.sparta.logistics.company.client.model;
 
 import java.util.UUID;
 
