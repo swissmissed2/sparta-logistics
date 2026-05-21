@@ -1,7 +1,7 @@
 package com.sparta.logistics.delivery.service;
 
 import com.sparta.logistics.delivery.dto.DeliveryDetailResponse;
-import com.sparta.logistics.delivery.entity.DeliveryEntity;
+import com.sparta.logistics.delivery.entity.Delivery;
 import com.sparta.logistics.delivery.repository.DeliveryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +23,9 @@ public class DeliveryService {
             throw new IllegalArgumentException("배송 ID는 필수 입력 값입니다.");
         }
 
-        DeliveryEntity deliveryEntity = deliveryRepository.findById(deliveryId)
+        Delivery delivery = deliveryRepository.findById(deliveryId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 배송 정보가 존재하지 않습니다. ID: " + deliveryId));
 
-        return DeliveryDetailResponse.from(deliveryEntity);
+        return DeliveryDetailResponse.from(delivery);
     }
 }
