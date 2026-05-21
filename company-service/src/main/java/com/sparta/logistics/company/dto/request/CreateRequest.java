@@ -1,6 +1,5 @@
 package com.sparta.logistics.company.dto.request;
 
-import com.sparta.logistics.company.entity.CompanyType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -19,7 +18,7 @@ public record CreateRequest(
         String name,
 
         @NotNull(message = "업체 타입은 필수입니다.")
-        CompanyType type,
+        String type,
 
         @NotNull(message = "관리 허브 ID는 필수입니다.")
         UUID hubId,
