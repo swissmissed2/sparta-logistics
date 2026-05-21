@@ -4,6 +4,10 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
+def excludedModules = [
+        'common', 'api-gateway', 'discovery-server', 'config-server', 'arch-rules'
+]
+
 ext {
     springBootVersion = "3.5.14"
     springCloudVersion = "2025.0.2"
@@ -43,36 +47,41 @@ subprojects {
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 
-    //공통 모듈(:common)
-    if (!['common', 'api-gateway', 'discovery-server', 'config-server', 'arch-rules'].contains(it.name)) {
-        dependencies {
-            // 여기에 속한 도메인 모듈(order, user, product, slack 등)은 자동으로 common을 참조
-            //ArchUnit 적용
-            implementation project(':common')
-            testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
-            testImplementation project(':arch-rules')
-
-            // Validation (DTO 검증)
-            implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-            // Spring Cloud (MSA 필수 통신 및 설정)
-            implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-            implementation 'org.springframework.cloud:spring-cloud-starter-config'
-
-            // 모니터링 (Actuator, Zipkin 분산 추적)
-            implementation 'org.springframework.boot:spring-boot-starter-actuator'
-            implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-            implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
-
-            // Swagger (API 문서)
-            implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
-
-            // DB (전 서비스가 PostgreSQL을 사용한다면 공통으로 처리)
-            runtimeOnly 'org.postgresql:postgresql'
-        }
-    }
-
     test {
         useJUnitPlatform()
     }
+
+    tasks.withType(JavaCompile).configureEach{
+        options.encoding = 'UTF-8'
+    }
 }
+
+configure(subprojects.findAll{!excludedModules.contains(it.name)}) {
+    dependencies {
+        // 여기에 속한 도메인 모듈(order, user, product, slack 등)은 자동으로 common을 참조
+        //ArchUnit 적용
+        implementation project(':common')
+        testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+        testImplementation project(':arch-rules')
+
+        // Validation (DTO 검증)
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+        // Spring Cloud (MSA 필수 통신 및 설정)
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+        implementation 'org.springframework.cloud:spring-cloud-starter-config'
+
+        // 모니터링 (Actuator, Zipkin 분산 추적)
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+        implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
+        // Swagger (API 문서)
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+
+        // DB (전 서비스가 PostgreSQL을 사용한다면 공통으로 처리)
+        runtimeOnly 'org.postgresql:postgresql'
+    }
+}
+
+
