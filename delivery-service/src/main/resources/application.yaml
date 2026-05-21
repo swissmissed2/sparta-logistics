@@ -7,9 +7,9 @@ spring:
   config:
     import: optional:configserver:http://localhost:8888
   datasource:
-    url: jdbc:postgresql://localhost:5432/logistics?currentSchema=schema_delivery
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}?currentSchema=schema_delivery
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
     properties:
