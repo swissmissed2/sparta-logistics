@@ -10,7 +10,7 @@ import lombok.Builder;
 import java.util.UUID;
 
 @Builder
-public record SignupRequest(
+public record SignupRequest( // 회원가입 요청
         @NotBlank(message = "아이디는 필수 입력값 입니다.")
         @Size(min = 4, max = 10, message = "아이디는 4자 이상, 10자 이하로 입력해주세요.")
         @Pattern(regexp = "^[a-z0-9]+$", message = "아이디는 알파벳 소문자와 숫자로만 구성되어야 합니다.")

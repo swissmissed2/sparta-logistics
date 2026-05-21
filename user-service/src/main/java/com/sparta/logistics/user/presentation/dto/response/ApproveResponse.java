@@ -8,7 +8,7 @@ import lombok.Builder;
 import java.util.UUID;
 
 @Builder
-public record ApproveResponse( // 승인 응답
+public record ApproveResponse( // 승인 및 거절 응답
         UUID userId,
         String username,
         UserStatus userStatus,
