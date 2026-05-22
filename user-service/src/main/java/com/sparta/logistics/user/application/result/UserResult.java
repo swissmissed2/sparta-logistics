@@ -15,6 +15,8 @@ public record UserResult(
         String name,
         Role role,
         UserStatus status,
+        UUID hubId,
+        UUID companyId,
         LocalDateTime createdAt
 ) {
     public static UserResult from(UserEntity user){
@@ -24,6 +26,8 @@ public record UserResult(
                 .name(user.getName())
                 .role(user.getRole())
                 .status(user.getStatus())
+                .hubId(user.getHubId())
+                .companyId(user.getCompanyId())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

@@ -1,0 +1,26 @@
+server:
+  port: 19094
+
+spring:
+  application:
+    name: product-service
+  config:
+    import: optional:configserver:http://localhost:8888
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}?currentSchema=schema_company
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        default_schema: schema_product
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${server.port}
+
+logging:
+  level:
+    com.sparta.logistics.product: DEBUG
+    org.hibernate.sql: DEBUG

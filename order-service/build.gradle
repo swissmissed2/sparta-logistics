@@ -11,6 +11,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
 	runtimeOnly 'org.postgresql:postgresql'
     testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
     testImplementation project(':arch-rules')

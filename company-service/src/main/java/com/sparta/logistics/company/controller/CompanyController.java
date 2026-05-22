@@ -30,8 +30,8 @@ public class CompanyController {
 
     private static final String USER_ID_HEADER    = "X-User-Id";
     private static final String USER_ROLE_HEADER  = "X-User-Role";
-    private static final String USER_HUB_HEADER   = "X-User-Hub-Id";
-    private static final String USER_COMPANY_HEADER = "X-User-Company-Id";
+    private static final String USER_HUB_HEADER   = "X-User-HubId";
+    private static final String USER_COMPANY_HEADER = "X-User-CompanyId";
     private final CompanyService companyService;
 
     // -------------------------------------------------------
@@ -41,12 +41,11 @@ public class CompanyController {
     @PostMapping
     public ResponseEntity<ApiResponse<CompanyResponse>> createCompany (
             @Valid @RequestBody CreateRequest request,
-            @RequestHeader(USER_ID_HEADER) UUID userId,
             @RequestHeader(USER_ROLE_HEADER) Role userRole,
             @RequestHeader(value = USER_HUB_HEADER, required = false) UUID userHubId) {
 
         CompanyResponse response =
-                companyService.createCompany(request, userId, userRole, userHubId);
+                companyService.createCompany(request, userRole, userHubId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("업체가 생성되었습니다.", response));
@@ -70,13 +69,7 @@ public class CompanyController {
         int validatedSize = validatePageSize(size);
 
         Pageable pageable = buildPageable(page, validatedSize, sort);
-
-        SearchCondition condition = new SearchCondition(
-                name,
-                parseEnum(com.sparta.logistics.company.entity.CompanyType.class, type),
-                hubId,
-                parseEnum(com.sparta.logistics.company.entity.CompanyStatus.class, status));
-
+        SearchCondition condition = new SearchCondition(name, type, hubId, status);
         Page<CompanyResponse> result = companyService.searchCompanies(condition, pageable);
 
         return ResponseEntity.ok(ApiResponse.ok("요청이 성공적으로 처리되었습니다.", result));
@@ -113,13 +106,12 @@ public class CompanyController {
     public ResponseEntity<ApiResponse<CompanyResponse>> updateCompany(
             @PathVariable UUID companyId,
             @Valid @RequestBody UpdateRequest request,
-            @RequestHeader(USER_ID_HEADER) UUID userId,
             @RequestHeader(USER_ROLE_HEADER) Role userRole,
             @RequestHeader(value = USER_HUB_HEADER, required = false) UUID userHubId,
             @RequestHeader(value = USER_COMPANY_HEADER, required = false) UUID userCompanyId) {
 
         CompanyResponse response = companyService.updateCompany(
-                companyId, request, userId, userRole,userHubId, userCompanyId);
+                companyId, request, userRole,userHubId, userCompanyId);
 
         return ResponseEntity.ok(ApiResponse.ok("업체 정보가 수정되었습니다.", response));
     }
@@ -160,15 +152,6 @@ public class CompanyController {
         } catch (Exception e) {
             return PageRequest.of(page, size, Sort.by(
                     Sort.Direction.DESC, "createdAt"));
-        }
-    }
-
-    private <E extends Enum<E>> E parseEnum(Class<E> enumClass, String value) {
-        if (value == null || value.isBlank()) return null;
-        try {
-            return Enum.valueOf(enumClass, value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return null;
         }
     }
 }

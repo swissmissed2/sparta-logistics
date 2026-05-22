@@ -1,7 +1,5 @@
 package com.sparta.logistics.company.dto.request;
 
-import com.sparta.logistics.company.entity.CompanyStatus;
-import com.sparta.logistics.company.entity.CompanyType;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -15,7 +13,7 @@ public record UpdateRequest(
         @Size(max = 100)
         String name,
 
-        CompanyType type,
+        String type,
 
         UUID hubId,
 
@@ -25,5 +23,5 @@ public record UpdateRequest(
         BigDecimal latitude,
         BigDecimal longitude,
 
-        CompanyStatus status
+        String status
 ) {}
