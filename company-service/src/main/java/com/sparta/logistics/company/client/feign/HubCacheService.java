@@ -1,6 +1,6 @@
 package com.sparta.logistics.company.client.feign;
 
-import com.sparta.logistics.company.client.dto.HubResponse;
+import com.sparta.logistics.company.client.model.HubResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

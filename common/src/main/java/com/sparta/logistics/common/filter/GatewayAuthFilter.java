@@ -15,11 +15,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
-public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
+public class GatewayAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -28,6 +30,9 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
 
         String userId = request.getHeader("X-User-Id");
         String role = request.getHeader("X-User-Role");
+        String hubId = request.getHeader("X-User-HubId");
+        String companyId = request.getHeader("X-User-CompanyId");
+
 
         if (StringUtils.hasText(userId) && StringUtils.hasText(role)) {
 
@@ -37,9 +42,13 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            Map<String, String> customDetails = new HashMap<>();
+            customDetails.put("hubId", hubId);
+            customDetails.put("companyId", companyId);
 
-            log.debug("GatewayHeaderFilter - userId: {}, role: {}", userId, role);
+            authentication.setDetails(customDetails);
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);

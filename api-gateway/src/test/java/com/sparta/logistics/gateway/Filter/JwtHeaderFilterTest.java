@@ -1,7 +1,7 @@
 package com.sparta.logistics.gateway.Filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.logistics.gateway.filter.JwtAuthenticationHeaderFilter;
+import com.sparta.logistics.gateway.filter.JwtHeaderFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,18 +39,18 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
-class JwtAuthenticationHeaderFilterTest {
+class JwtHeaderFilterTest {
 
     @Mock
     ReactiveJwtDecoder jwtDecoder;
     @Mock
     ObjectMapper objectMapper;
 
-    JwtAuthenticationHeaderFilter filter;
+    JwtHeaderFilter filter;
 
     @BeforeEach
     void setUp() {
-        filter = new JwtAuthenticationHeaderFilter(objectMapper, jwtDecoder);
+        filter = new JwtHeaderFilter(objectMapper, jwtDecoder);
     }
 
     @Test

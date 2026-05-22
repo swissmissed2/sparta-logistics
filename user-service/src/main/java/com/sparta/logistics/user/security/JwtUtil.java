@@ -15,17 +15,13 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Component
 public class JwtUtil {
 
-    public static final String AUTH_HEADER = "Authorization";
-    public static final String AUTH_KEY = "auth";
-    public static final String TOKEN_TYPE_KEY = "token_type";
-    public static final String ACCESS_TOKEN = "access";
     public static final String REFRESH_TOKEN = "refresh";
-    public static final String BEARER_PREFIX = "Bearer ";
     public static final long ACCESS_VALID_TIME = 15 * 60 * 1000L; // 로그아웃 기능이 따로 없어 유효시간 15분으로 제한
     public static final long REFRESH_VALID_TIME = 35L * 24 * 60 * 60 * 1000L; // 리프레시 유효 시간 (15일)
 
@@ -39,58 +35,64 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    public String createAccessToken(String userId, Role role) {
-        return createAccessToken(userId, role, Duration.ofMillis(ACCESS_VALID_TIME));
+    // 액세스 토큰 생성
+    public String createAccessToken(String userId, Role role, String hubId, String companyId) {
+        return createAccessToken(userId, role,hubId, companyId, Duration.ofMillis(ACCESS_VALID_TIME));
     }
 
-    // 요청한 만료 시간을 전달받아 엑세스 토큰 생성
-    public String createAccessToken(String userId, Role role, Duration validity) {
+    // 액세스 토큰 생성 (유효시간 커스텀)
+    public String createAccessToken(String userId, Role role, String hubId, String companyId,  Duration validity) {
 
         Date now = new Date();
         Date exp = new Date(now.getTime() + validity.toMillis());
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userId)
-                .claim(AUTH_KEY, role)
-                .claim(TOKEN_TYPE_KEY, ACCESS_TOKEN)
+                .claim("auth", role)
+                .claim("token_type", "access")
                 .expiration(exp)
                 .issuedAt(now)
-                .signWith(key)
-                .compact();
+                .signWith(key);
+
+        if (hubId != null)
+            builder.claim("companyId",companyId);
+
+        if (companyId != null)
+            builder.claim("hubId",hubId);
+
+        return builder.compact();
+
     }
 
 
     // 리프레시 토큰 생성
-    public String createRefreshToken(String userId, Role role) {
+    public String createRefreshToken(String userId, Role role, String hubId, String companyId) {
 
         Date now = new Date();
         Date exp = new Date(now.getTime() + REFRESH_VALID_TIME);
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userId)
-                .claim(AUTH_KEY, role)
-                .claim(TOKEN_TYPE_KEY, REFRESH_TOKEN)
+                .claim("auth", role)
+                .claim("token_type", "access")
                 .expiration(exp)
                 .issuedAt(now)
-                .compact();
+                .signWith(key);
+
+        if (hubId != null)
+            builder.claim("companyId",companyId);
+
+        if (companyId != null)
+            builder.claim("hubId",hubId);
+
+        return builder.compact();
     }
 
-    public boolean validateAccessToken(String token) {
-        return validateToken(token, ACCESS_TOKEN);
-    }
 
-    public boolean validateRefreshToken(String token) {
-        return validateToken(token, REFRESH_TOKEN);
-    }
-
-    /**
-     * 서명·만료 검증 후 {@link #TOKEN_TYPE_KEY} 가 {@code expectedTokenType} 과 일치할 때만 클레임을 반환한다.
-     * JWT 문자열은 최대 한 번만 파싱한다.
-     */
     public Optional<Claims> parseClaimsIfMatchType(String token, String expectedTokenType) {
         try {
             Claims claims = getUserInfoFromToken(token);
-            if (!expectedTokenType.equals(claims.get(TOKEN_TYPE_KEY))) {
+            if (!expectedTokenType.equals(claims.get("token_type"))) {
                 log.error("Token type mismatch. Expected: {}", expectedTokenType);
                 return Optional.empty();
             }
@@ -107,12 +109,6 @@ public class JwtUtil {
         return Optional.empty();
     }
 
-    // 유효성 검사
-    public boolean validateToken(String token, String Type) {
-        return parseClaimsIfMatchType(token, Type).isPresent();
-    }
-
-
     // 파싱 , 검증
     public Claims getUserInfoFromToken(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
@@ -122,8 +118,8 @@ public class JwtUtil {
     public String substringToken(String tokenValue) {
         if (!StringUtils.hasText(tokenValue)) {return null;}
         String t = tokenValue.trim();
-        if (t.length() >= BEARER_PREFIX.length() && t.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
-            t = t.substring(BEARER_PREFIX.length()).trim();
+        if (t.length() >= "Bearer ".length() && t.regionMatches(true, 0, "Bearer ", 0, "Bearer ".length())) {
+            t = t.substring("Bearer ".length()).trim();
         }
         return StringUtils.hasText(t) ? t : null;
     }

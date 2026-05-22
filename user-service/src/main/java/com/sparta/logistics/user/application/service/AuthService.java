@@ -100,8 +100,8 @@ public class AuthService {
             throw new BusinessException(UserErrorCode.USER_NOT_APPROVED);
         }
 
-        String accessToken = jwtUtil.createAccessToken(userId.toString(), user.getRole());
-        String newRefreshToken = jwtUtil.createRefreshToken(userId.toString(), user.getRole());
+        String accessToken = jwtUtil.createAccessToken(userId.toString(), user.getRole(),user.getHubId().toString(), user.getCompanyId().toString());
+        String newRefreshToken = jwtUtil.createRefreshToken(userId.toString(), user.getRole(), user.getHubId().toString(), user.getCompanyId().toString());
 
         return new Token(UserResult.from(user), accessToken, newRefreshToken);
     }
@@ -126,8 +126,10 @@ public class AuthService {
     // 토큰 생성
     public Token issueToken(UserEntity user) {
         String userId = user.getId().toString();
-        String accessToken = jwtUtil.createAccessToken(userId, user.getRole());
-        String refreshToken = jwtUtil.createRefreshToken(userId, user.getRole());
+        String hubId = user.getHubId().toString();
+        String companyId = user.getCompanyId().toString();
+        String accessToken = jwtUtil.createAccessToken(userId, user.getRole(), hubId, companyId );
+        String refreshToken = jwtUtil.createRefreshToken(userId, user.getRole(), hubId, companyId);
 
         return new Token(UserResult.from(user), accessToken, refreshToken);
     }

@@ -114,17 +114,20 @@ public class OrderService {
 
     /** 주문 수정 **/
     @Transactional
-    public OrderDetailResponse updateOrder(UUID orderId, LocalDateTime dueDate, String requestMemo, UUID userId, Role role) {
+    public OrderDetailResponse updateOrder(UUID orderId, LocalDateTime dueDate, String requestMemo, UUID userId, Role role, UUID userHubId) {
         // 수정은 HUB_MANAGER 또는 MASTER만 가능
         if (!isAdminRole(role)) {
             throw new BusinessException(OrderErrorCode.ORDER_UPDATE_PERMISSION_DENIED);
         }
 
-        // TODO: HUB_MANAGER는 본인 담당 허브만 수정 가능해야 함
-
         Order order = findOrder(orderId);
 
-        // CANCELLED 또는 COMPLETED 상태는 수정 불가
+        // HUB_MANAGER는 본인 담당 허브 소속 업체의 주문만 수정 가능
+        if (role == Role.HUB_MANAGER) {
+            checkHubPermission(order.getRequesterCompanyId(), userHubId);
+        }
+
+        // CANCELLED COMPLETED, IN_DELIVERY 상태는 수정 불가
         if (!order.isModifiable()) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_MODIFIABLE);
         }
@@ -140,17 +143,20 @@ public class OrderService {
      * 3. 주문 상태 → CANCELLED ✅
      * */
     @Transactional
-    public OrderDetailResponse cancelOrder(UUID orderId, String cancelReason, UUID userId, Role role) {
+    public OrderDetailResponse cancelOrder(UUID orderId, String cancelReason, UUID userId, Role role, UUID userHubId) {
         // 취소는 HUB_MANAGER 또는 MASTER만 가능
         if (!isAdminRole(role)) {
             throw new BusinessException(OrderErrorCode.ORDER_CANCEL_PERMISSION_DENIED);
         }
 
-        // TODO: HUB_MANAGER는 본인 담당 허브만 취소 가능해야 함
-
         Order order = findOrder(orderId);
 
-        // CANCELLED 또는 COMPLETED 상태는 취소 불가
+        // HUB_MANAGER는 본인 담당 허브 소속 업체의 주문만 취소 가능
+        if (role == Role.HUB_MANAGER) {
+            checkHubPermission(order.getRequesterCompanyId(), userHubId);
+        }
+
+        // CANCELLED, COMPLETED, IN_DELIVERY 상태는 취소 불가
         if (!order.isModifiable()) {
             throw new BusinessException(OrderErrorCode.ORDER_NOT_CANCELLABLE);
         }
@@ -171,7 +177,12 @@ public class OrderService {
 
     private ProductResponse fetchProduct(UUID productId) {
         try {
-            return productServiceClient.getProduct(productId).data();
+            // AVAILABLE 상태가 아닌 상품은 주문 불가
+            ProductResponse product = productServiceClient.getProduct(productId).data();
+            if (!"AVAILABLE".equals(product.status())) {
+                throw new BusinessException(OrderErrorCode.PRODUCT_NOT_AVAILABLE);
+            }
+            return product;
         } catch (FeignException.NotFound e) {
             throw new BusinessException(OrderErrorCode.PRODUCT_NOT_FOUND);
         } catch (FeignException e) {
@@ -203,5 +214,16 @@ public class OrderService {
 
     private boolean isAdminRole(Role role) {
         return Role.MASTER == role || Role.HUB_MANAGER == role;
+    }
+
+    private void checkHubPermission(UUID requesterCompanyId, UUID userHubId) {
+        try {
+            CompanyResponse company = companyServiceClient.getCompany(requesterCompanyId).data();
+            if (company == null || !company.hubId().equals(userHubId)) {
+                throw new BusinessException(OrderErrorCode.ORDER_HUB_ACCESS_DENIED);
+            }
+        } catch (FeignException e) {
+            throw new BusinessException(OrderErrorCode.COMPANY_SERVICE_UNAVAILABLE);
+        }
     }
 }
