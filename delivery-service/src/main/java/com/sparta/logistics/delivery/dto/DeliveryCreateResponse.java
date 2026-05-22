@@ -1,26 +1,22 @@
 package com.sparta.logistics.delivery.dto;
 
 import com.sparta.logistics.delivery.entity.DeliveryStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 import java.util.UUID;
 
-@Getter
-@AllArgsConstructor
-public class DeliveryCreateResponse {
-    // TODO: 배송 식별자 필드 정의
-    private UUID id;
+public record DeliveryCreateResponse(
+        UUID id,
+        UUID orderId,
+        DeliveryStatus status,
+        String reason
+) {
+    // 성공: 오더와 알림에 delivery.created 발행
+    public static DeliveryCreateResponse success(UUID orderId, UUID deliveryId) {
+        return new DeliveryCreateResponse(deliveryId, orderId, DeliveryStatus.CREATED, null);
+    }
 
-    // TODO: 주문 식별자 필드 정의
-    private UUID orderId;
-
-    // TODO: 사용자 식별자 필드 정의
-    private UUID userId;
-
-    // TODO: 배송지 주소 필드 정의
-    private String address;
-
-    // TODO: 배송 상태 필드 정의
-    private DeliveryStatus status;
+    // 실패: 허브와 오더에 delivery.creation.failed 발행
+    public static DeliveryCreateResponse fail(UUID orderId, String reason) {
+        return new DeliveryCreateResponse(null, orderId, DeliveryStatus.CANCELLED, reason);
+    }
 }

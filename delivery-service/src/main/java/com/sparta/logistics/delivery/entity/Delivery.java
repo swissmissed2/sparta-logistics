@@ -63,7 +63,7 @@ public class Delivery extends BaseEntity {
     private LocalDateTime completedAt;
 
     // 생성
-    public DeliveryEntity(UUID orderId, String deliveryAddress, String receiverSlackId) {
+    public Delivery(UUID orderId, String deliveryAddress, String receiverSlackId) {
         this.orderId = orderId;
         this.deliveryAddress = deliveryAddress;
         this.receiverSlackId = receiverSlackId;
