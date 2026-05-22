@@ -13,17 +13,17 @@ import java.util.UUID;
 
 
 @Entity
-@Builder
 @Table(name="p_user")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class UserEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID Id;
+    private UUID id;
 
     @Column(nullable = false)
     private String username;
@@ -48,9 +48,8 @@ public class UserEntity extends BaseEntity {
 
     private UUID companyId;
 
-    private LocalDateTime last_login_at; // 마지막 로그인 일시
+    private LocalDateTime lastLoginAt; // 마지막 로그인 일시
 
-    @Builder
     public UserEntity(String username, String password, String name, String email,
                       String slackId, Role role, UserStatus status, UUID hubId, UUID companyId) {
 
@@ -63,7 +62,7 @@ public class UserEntity extends BaseEntity {
         this.status = status;
         this.hubId = hubId;
         this.companyId = companyId;
-        this.last_login_at = LocalDateTime.now();
+        this.lastLoginAt = LocalDateTime.now();
 
         validateRoleConstraints();
     }
@@ -91,13 +90,6 @@ public class UserEntity extends BaseEntity {
         }
     }
 
-    public void updateRoleAndIds(Role role, UUID hubId, UUID companyId) {
-        this.role = role;
-        this.hubId = hubId;
-        this.companyId = companyId;
-        validateRoleConstraints(); // 변경 시에도 검증
-    }
-
     public void approve(){
         if(this.status !=UserStatus.PENDING) {
             throw new BusinessException(UserErrorCode.ALREADY_PROCESSED);
@@ -110,6 +102,17 @@ public class UserEntity extends BaseEntity {
             throw new BusinessException(UserErrorCode.ALREADY_PROCESSED);
         }
         this.status = UserStatus.REJECTED;
+    }
+
+    public void update(String name, String email,String slackId,Role role,UUID hubId,UUID companyId){
+        this.name = name;
+        this.email = email;
+        this.slackId = slackId;
+        this.role = role;
+        this.hubId = hubId;
+        this.companyId = companyId;
+
+        validateRoleConstraints();
     }
 
 }

@@ -14,12 +14,12 @@ public record ApproveResponse( // 승인 및 거절 응답
         UserStatus userStatus,
         Role role
 ) {
-    @Builder
+
     public static ApproveResponse approveResponse(UserEntity user){
         return ApproveResponse.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
-                .userStatus(UserStatus.APPROVED)
+                .userStatus(user.getStatus())
                 .role(user.getRole())
                 .build();
     }

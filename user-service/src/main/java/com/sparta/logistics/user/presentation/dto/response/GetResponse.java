@@ -35,7 +35,7 @@ public record GetResponse( // 조회 응답
                 .status(user.getStatus())
                 .hubId(user.getHubId())
                 .companyId(user.getCompanyId())
-                .lastLoginAt(user.getUpdatedAt())
+                .lastLoginAt(user.getLastLoginAt())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

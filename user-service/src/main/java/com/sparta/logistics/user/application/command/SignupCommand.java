@@ -20,6 +20,7 @@ public record SignupCommand(
 ) {
 
     public UserEntity toEntity(String encodedPassword) {
+
         return UserEntity.builder()
                 .username(username)
                 .password(encodedPassword)

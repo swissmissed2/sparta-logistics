@@ -106,14 +106,6 @@ public class AuthService {
         return new Token(UserResult.from(user), accessToken, newRefreshToken);
     }
 
-    //승인
-    @Transactional
-    public ApproveResponse approveUser(UUID id) {
-        UserEntity user = userRepository.findById(id)
-                .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
-        user.approve();
-        return ApproveResponse.approveResponse(user);
-    }
 
     // 거절
     @Transactional
