@@ -13,11 +13,12 @@ import java.util.UUID;
 
 
 @Entity
-@Table(name="p_user")
+@Table(name="p_user", indexes = {
+        @Index(name = "idx_user_username_deleted_at", columnList = "username, deleted_at")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-@Setter
 @Builder
 public class UserEntity extends BaseEntity {
 
@@ -25,47 +26,35 @@ public class UserEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true, length = 10)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
+    @Column(unique = true, length = 255)
     private String email;
 
+    @Column(length = 255)
     private String slackId;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
     private Role role;
 
-    @Column(nullable = false)
-    private UserStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'PENDING'")
+    @Builder.Default
+    private UserStatus status = UserStatus.PENDING;
 
     private UUID hubId;
 
     private UUID companyId;
 
     private LocalDateTime lastLoginAt; // 마지막 로그인 일시
-
-    public UserEntity(String username, String password, String name, String email,
-                      String slackId, Role role, UserStatus status, UUID hubId, UUID companyId) {
-
-        this.username = username;
-        this.password = password;
-        this.name = name;
-        this.email = email;
-        this.slackId = slackId;
-        this.role = role;
-        this.status = status;
-        this.hubId = hubId;
-        this.companyId = companyId;
-        this.lastLoginAt = LocalDateTime.now();
-
-        validateRoleConstraints();
-    }
 
     public void validateRoleConstraints() {
         if (this.role == null) return;
@@ -74,20 +63,24 @@ public class UserEntity extends BaseEntity {
             case HUB_MANAGER:
             case DELIVERY_MANAGER:
                 if (this.hubId == null) {
-                    throw new IllegalArgumentException(this.role + "은(는) hubId가 필수입니다.");
+                    throw new BusinessException(UserErrorCode.INVALID_ROLE_CONSTRAINT);
                 }
                 break;
             case COMPANY_MANAGER:
                 if (this.companyId == null) {
-                    throw new IllegalArgumentException(this.role + "은(는) companyId가 필수입니다.");
+                    throw new BusinessException(UserErrorCode.INVALID_ROLE_CONSTRAINT);
                 }
                 break;
             case MASTER:
                 if (this.hubId != null || this.companyId != null) {
-                    throw new IllegalArgumentException("MASTER는 hubId와 companyId를 가질 수 없습니다.");
+                    throw new BusinessException(UserErrorCode.INVALID_ROLE_CONSTRAINT);
                 }
                 break;
         }
+    }
+
+    public void updateLastLoginAt() {
+        this.lastLoginAt = LocalDateTime.now();
     }
 
     public void approve(){

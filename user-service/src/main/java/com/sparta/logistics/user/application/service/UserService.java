@@ -11,10 +11,7 @@ import com.sparta.logistics.user.presentation.dto.response.ApproveResponse;
 import com.sparta.logistics.user.presentation.dto.response.DeleteResponse;
 import com.sparta.logistics.user.presentation.dto.response.GetResponse;
 import com.sparta.logistics.user.presentation.dto.response.UpdateResponse;
-import jakarta.validation.Valid;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,46 +30,46 @@ public class UserService {
     // 마스터 승인
     @Transactional
     public ApproveResponse approveUserByMaster(UUID userId) {
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
         user.approve();
-        return ApproveResponse.approveResponse(user);
+        return ApproveResponse.from(user);
     }
 
     // 허브 매니저 승인
     @Transactional
     public ApproveResponse approveUserByHub(UUID userId, UUID hubId) {
 
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
-        if(!user.getHubId().equals(hubId))
-            throw new BusinessException(UserErrorCode.ACCESS_DENIED);
+        if(!hubId.equals(user.getHubId()))
+            throw new BusinessException(UserErrorCode.HUB_MISMATCH);
         user.approve();
-        return ApproveResponse.approveResponse(user);
+        return ApproveResponse.from(user);
     }
 
     // 마스터 거절
     @Transactional
     public ApproveResponse rejectUserByMaster(UUID userId) {
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
         user.reject();
-        return ApproveResponse.approveResponse(user);
+        return ApproveResponse.from(user);
     }
 
     // 허브 매니저 거절
     @Transactional
     public ApproveResponse rejectUserByHub(UUID userId, UUID hubId) {
 
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
-        if(!user.getHubId().equals(hubId))
-            throw new BusinessException(UserErrorCode.ACCESS_DENIED);
+        if(!hubId.equals(user.getHubId()))
+            throw new BusinessException(UserErrorCode.HUB_MISMATCH);
 
         user.reject();
-        return ApproveResponse.approveResponse(user);
+        return ApproveResponse.from(user);
     }
 
     // 전체 조회
@@ -84,7 +81,7 @@ public class UserService {
     // 유저 조회
     public GetResponse getUser(UUID userId) {
 
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
         return GetResponse.from(user);
@@ -93,10 +90,10 @@ public class UserService {
 
     // 사용자 수정
     @Transactional
-    public UpdateResponse updateUser(UUID userId, @Valid UpdateRequest request) {
+    public UpdateResponse updateUser(UUID userId, UpdateRequest request) {
 
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(()->new BusinessException(UserErrorCode.ACCESS_DENIED));
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
         user.update(request.name(),request.email(),request.slackId(),request.role(),request.hubId(),request.companyId());
 
@@ -105,13 +102,10 @@ public class UserService {
 
     // 사용자 삭제
     @Transactional
-    public DeleteResponse deleteUser(UUID userId) {
-        UserEntity user = userRepository.findById(userId)
+    public DeleteResponse deleteUser(UUID userId, UUID requesterId) {
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
-        if(user.isDeleted()){
-            throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
-        }
-        user.softDelete(userId);
+        user.softDelete(requesterId);
 
         return DeleteResponse.from(user);
     }

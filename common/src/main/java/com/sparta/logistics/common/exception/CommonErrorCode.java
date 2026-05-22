@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum CommonErrorCode implements ErrorCode{
 
     VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "COMMON_001", "유효성 검증에 실패했습니다."),
-    TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "COMMON_102", "요청 파라미터 타입이 올바르지 않습니다."),
+    TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "COMMON_002", "요청 파라미터 타입이 올바르지 않습니다."),
     MISSING_REQUEST_HEADER(HttpStatus.BAD_REQUEST, "COMMON_003", "필수 헤더가 누락되었습니다."),
     INVALID_REQUEST_BODY(HttpStatus.BAD_REQUEST, "COMMON_004", "요청 바디를 읽을 수 없습니다."),
 

@@ -11,15 +11,15 @@ import java.util.UUID;
 public record ApproveResponse( // 승인 및 거절 응답
         UUID userId,
         String username,
-        UserStatus userStatus,
+        UserStatus status,
         Role role
 ) {
 
-    public static ApproveResponse approveResponse(UserEntity user){
+    public static ApproveResponse from(UserEntity user){
         return ApproveResponse.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
-                .userStatus(user.getStatus())
+                .status(user.getStatus())
                 .role(user.getRole())
                 .build();
     }

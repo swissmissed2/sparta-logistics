@@ -3,6 +3,7 @@ package com.sparta.logistics.user.presentation.dto.request;
 import com.sparta.logistics.user.application.command.SignupCommand;
 import com.sparta.logistics.common.domain.Role;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
@@ -17,23 +18,24 @@ public record SignupRequest( // 회원가입 요청
         String username,
 
         @NotBlank(message = "비밀번호는 필수 입력값 입니다.")
-        @Size(min = 4, max = 15, message = "비밀번호는 8자 이상, 15자 이하로 입력해주세요.")
-        @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{4,15}$",
+        @Size(min = 8, max = 15, message = "비밀번호는 8자 이상, 15자 이하로 입력해주세요.")
+        @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,15}$",
                 message = "비밀번호는 알파벳 대소문자, 숫자, 특수문자를 각각 최소 1개 이상 포함해야 합니다.")
         String password,
 
         @NotBlank(message = "이름은 필수 입력 값입니다.")
-        @Size(max = 100)
+        @Size(max = 100, message = "이름은 100자 이하로 입력해주세요.")
         String name,
 
-        @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+        @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$", message = "이메일 형식이 올바르지 않습니다.")
+        @Size(max = 255, message = "이메일은 255자 이하로 입력해주세요.")
         String email,
 
-        @NotBlank(message = "이름은 필수 입력 값입니다.")
-        @Size(max = 100)
+        @NotBlank(message = "slackId는 필수 입력 값입니다.")
+        @Size(max = 255, message = "slackId는 255자 이하로 입력해주세요.")
         String slackId,
 
-        @NotBlank(message = "권한은 필수  입력 값입니다.")
+        @NotNull(message = "권한은 필수 입력 값입니다.")
         Role role,
 
         UUID hubId,

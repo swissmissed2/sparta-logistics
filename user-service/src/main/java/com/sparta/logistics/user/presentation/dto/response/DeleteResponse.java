@@ -10,16 +10,12 @@ import java.util.UUID;
 @Builder
 public record DeleteResponse( // 삭제 응답
         UUID userId,
-        String username,
-        UserStatus status,
-        LocalDateTime deleteAt
+        LocalDateTime deletedAt
 ) {
     public static DeleteResponse from(UserEntity user) {
         return DeleteResponse.builder()
                 .userId(user.getId())
-                .username(user.getUsername())
-                .status(user.getStatus())
-                .deleteAt(user.getDeletedAt())
+                .deletedAt(user.getDeletedAt())
                 .build();
     }
 

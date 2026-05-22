@@ -24,6 +24,7 @@ public record SignupResponse( // 회원가입 응답
                 .name(userResult.name())
                 .role(userResult.role())
                 .status(userResult.status())
+                .createdAt(userResult.createdAt())
                 .build();
     }
 }

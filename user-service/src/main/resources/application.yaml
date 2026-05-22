@@ -18,6 +18,11 @@ spring:
       hibernate:
         default_schema: schema_user
 
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+
 eureka:
   instance:
     instance-id: ${spring.application.name}:${server.port}

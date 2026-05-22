@@ -9,14 +9,12 @@ import com.sparta.logistics.user.domain.model.entity.UserEntity;
 import com.sparta.logistics.user.domain.model.enums.UserStatus;
 import com.sparta.logistics.user.domain.repository.UserRepository;
 import com.sparta.logistics.user.exception.UserErrorCode;
-import com.sparta.logistics.user.presentation.dto.response.ApproveResponse;
 import com.sparta.logistics.user.security.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -46,39 +44,27 @@ public class AuthService {
 
 
     // 로그인
-    @Transactional(readOnly = true)
+    @Transactional
     public Token login(LoginCommand command) {
 
-        UserEntity user = userRepository.findByUsername(command.username())
-                .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND) {
-                });
+        UserEntity user = userRepository.findByUsernameAndDeletedAtIsNull(command.username())
+                .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(command.password(), user.getPassword())) {
-            throw new BusinessException(UserErrorCode.PASSWORD_NOT_MATCH) {
-            };
+            throw new BusinessException(UserErrorCode.PASSWORD_NOT_MATCH);
         }
 
         if (user.getStatus() != UserStatus.APPROVED) {
-            throw new BusinessException(UserErrorCode.USER_NOT_APPROVED){
-            };
+            throw new BusinessException(UserErrorCode.USER_NOT_APPROVED);
         }
 
-        return issueToken(user);
+        user.updateLastLoginAt();
 
+        return issueToken(user);
     }
 
     // 토큰 갱신
-    @Transactional
-    public Token refresh(String bearerRefreshToken) {
-
-        if (!StringUtils.hasText(bearerRefreshToken)) {
-            throw new BusinessException(UserErrorCode.INVALID_TOKEN);
-        }
-
-        String refreshToken = jwtUtil.substringToken(bearerRefreshToken); // 안전장치
-        if (refreshToken == null) {
-            throw new BusinessException(UserErrorCode.INVALID_TOKEN);
-        }
+    public Token refresh(String refreshToken) {
 
         Claims claims = jwtUtil.parseClaimsIfMatchType(refreshToken, JwtUtil.REFRESH_TOKEN)
                 .orElseThrow(() -> new BusinessException(UserErrorCode.INVALID_TOKEN));
@@ -93,34 +79,31 @@ public class AuthService {
 
         // redis 추가 예정
 
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(()-> new BusinessException(UserErrorCode.USER_NOT_FOUND));
 
         if (user.getStatus() != UserStatus.APPROVED){
             throw new BusinessException(UserErrorCode.USER_NOT_APPROVED);
         }
 
-        String accessToken = jwtUtil.createAccessToken(userId.toString(), user.getRole(),user.getHubId().toString(), user.getCompanyId().toString());
-        String newRefreshToken = jwtUtil.createRefreshToken(userId.toString(), user.getRole(), user.getHubId().toString(), user.getCompanyId().toString());
+        String hubId = (user.getHubId() != null) ? user.getHubId().toString() : null;
+        String companyId = (user.getCompanyId() != null) ? user.getCompanyId().toString() : null;
+
+        String accessToken = jwtUtil.createAccessToken(userId.toString(), user.getRole(),hubId, companyId);
+        String newRefreshToken = jwtUtil.createRefreshToken(userId.toString(), user.getRole(), hubId, companyId);
 
         return new Token(UserResult.from(user), accessToken, newRefreshToken);
     }
 
 
-    // 거절
-    @Transactional
-    public void rejectUser(UUID id) {
-        UserEntity user = userRepository.findById(id)
-                .orElseThrow(()->new BusinessException(UserErrorCode.USER_NOT_FOUND));
-        user.reject();
-    }
-
     // 토큰 생성
     public Token issueToken(UserEntity user) {
         String userId = user.getId().toString();
-        String hubId = user.getHubId().toString();
-        String companyId = user.getCompanyId().toString();
-        String accessToken = jwtUtil.createAccessToken(userId, user.getRole(), hubId, companyId );
+
+        String hubId = (user.getHubId() != null) ? user.getHubId().toString() : null;
+        String companyId = (user.getCompanyId() != null) ? user.getCompanyId().toString() : null;
+
+        String accessToken = jwtUtil.createAccessToken(userId, user.getRole(), hubId, companyId);
         String refreshToken = jwtUtil.createRefreshToken(userId, user.getRole(), hubId, companyId);
 
         return new Token(UserResult.from(user), accessToken, refreshToken);

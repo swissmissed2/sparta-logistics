@@ -19,7 +19,7 @@ public record UpdateResponse( // 수정 응답
         UserStatus status,
         UUID hubId,
         UUID companyId,
-        LocalDateTime updateAt
+        LocalDateTime updatedAt
 ) {
     public static UpdateResponse from(UserEntity user) {
         return UpdateResponse.builder()
@@ -32,7 +32,7 @@ public record UpdateResponse( // 수정 응답
                 .status(user.getStatus())
                 .hubId(user.getHubId())
                 .companyId(user.getCompanyId())
-                .updateAt(user.getUpdatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 }

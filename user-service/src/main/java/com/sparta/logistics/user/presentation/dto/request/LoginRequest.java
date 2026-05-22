@@ -13,9 +13,13 @@ public record LoginRequest( // 로그인 요청
         String password
 ){
     public LoginCommand toCommand(){
-    return null;
-
-
+        return LoginCommand.builder()
+                .username(username)
+                .password(password)
+                .build();
     }
 
+
 }
+
+

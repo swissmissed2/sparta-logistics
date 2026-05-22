@@ -19,6 +19,7 @@ public record LoginResponse( // 로그인 응답
     public static LoginResponse from(String accessToken, UserResult userResult) {
         return LoginResponse.builder()
                 .accessToken(accessToken)
+                .username(userResult.username())
                 .role(userResult.role())
                 .status(userResult.status())
                 .build();

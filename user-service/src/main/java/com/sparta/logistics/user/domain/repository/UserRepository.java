@@ -17,9 +17,12 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     boolean existsByUsername(String username);
 
-    Optional<UserEntity> findByUsername(String username);
+    Optional<UserEntity> findByUsernameAndDeletedAtIsNull(String username);
+
+    Optional<UserEntity> findByIdAndDeletedAtIsNull(UUID id);
 
     @Query("SELECT u FROM UserEntity u WHERE " +
+            "u.deletedAt IS NULL AND " +
             "(:username IS NULL OR u.username = :username) AND " +
             "(:name IS NULL OR u.name = :name) AND " +
             "(:role IS NULL OR u.role = :role) AND " +

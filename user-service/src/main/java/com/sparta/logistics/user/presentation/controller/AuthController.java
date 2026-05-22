@@ -23,7 +23,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // 회원가입
+    // 회원가입 ( 모든 사용자 )
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<SignupResponse>> signUp(@Valid @RequestBody SignupRequest request) {
 
@@ -32,15 +32,15 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created("회원가입 요청이 완료되었습니다.", SignupResponse.from(userResult)));
     }
 
-    // 로그인
+    // 로그인 ( 승인된 사용자 )
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request){
 
         Token token = authService.login(request.toCommand());
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token.accessToken());
-        headers.set("X-Refresh-Token", token.refreshToken());
+        headers.setBearerAuth(token.accessToken()); // Bearer + accessToken
+        headers.set("X-Refresh-Token", token.refreshToken()); // refreshToken
 
 
         return ResponseEntity.ok()
@@ -51,7 +51,7 @@ public class AuthController {
 
     // 토큰 갱신
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<SignupResponse>> refreshToken(
+    public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
             @RequestHeader("X-Refresh-Token") String refreshToken){
 
         Token token = authService.refresh(refreshToken);
@@ -62,7 +62,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(ApiResponse.ok(SignupResponse.from(token.userResult())));
+                .body(ApiResponse.ok(LoginResponse.from(token.accessToken() ,token.userResult())));
     }
 
 

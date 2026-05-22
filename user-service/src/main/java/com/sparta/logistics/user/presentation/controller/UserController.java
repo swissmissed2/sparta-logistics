@@ -20,6 +20,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.sparta.logistics.common.domain.Role.HUB_MANAGER;
@@ -30,6 +31,7 @@ import static com.sparta.logistics.common.domain.Role.MASTER;
 @RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
+    private static final List<Integer> ALLOWED_PAGE_SIZES = List.of(10, 30, 50);
 
     // 가입 승인 (MASTER, HUB_MANAGER)
     @PatchMapping("/approve/{userId}")
@@ -37,12 +39,13 @@ public class UserController {
                                                                     @RequestHeader("X-User-Role") Role role,
                                                                     @RequestHeader(value = "X-User-HubId", required = false) UUID hubId)
     {
-        if(role.equals(MASTER)){
+        if(MASTER.equals(role)){
             ApproveResponse response = userService.approveUserByMaster(userId);
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
 
-        else if(role.equals(HUB_MANAGER)) {
+        else if(HUB_MANAGER.equals(role)) {
+            if (hubId == null) throw new BusinessException(UserErrorCode.ACCESS_DENIED);
             ApproveResponse response = userService.approveUserByHub(userId, hubId);
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
@@ -55,31 +58,33 @@ public class UserController {
                                                           @RequestHeader("X-User-Role") Role role,
                                                           @RequestHeader(value = "X-User-HubId", required = false) UUID hubId)
     {
-        if(role.equals(MASTER)){
+        if(MASTER.equals(role)){
             ApproveResponse response = userService.rejectUserByMaster(userId);
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
 
-        else if(role.equals(HUB_MANAGER)) {
+        else if(HUB_MANAGER.equals(role)) {
+            if (hubId == null) throw new BusinessException(UserErrorCode.ACCESS_DENIED);
             ApproveResponse response = userService.rejectUserByHub(userId, hubId);
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
         throw new BusinessException(UserErrorCode.ACCESS_DENIED);
     }
 
-    //@RequestHeader(value = "X-User-HubId", required = false) UUID hubId
-
     // 전체 정보 조회 (MASTER)
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<GetResponse>>> getsUsers(
+    public ResponseEntity<ApiResponse<Page<GetResponse>>> getUsers(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Role role,
             @RequestParam(required = false) UserStatus status,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            @RequestHeader("X-User-Role") Role role1
+            @RequestHeader("X-User-Role") Role requestRole
     ) {
-        if(MASTER.equals(role1)){
+        if (!ALLOWED_PAGE_SIZES.contains(pageable.getPageSize())) {
+            throw new BusinessException(UserErrorCode.INVALID_PAGE_SIZE);
+        }
+        if(MASTER.equals(requestRole)){
             Page<GetResponse> response = userService.getUsers(username,name,role,status, pageable);
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
@@ -109,27 +114,19 @@ public class UserController {
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
         throw new BusinessException(UserErrorCode.ACCESS_DENIED);
-
-
     }
-
 
     // 사용자 삭제 (MASTER)
     @DeleteMapping("/{userId}") // MASTER
     public ResponseEntity<ApiResponse<DeleteResponse>> deleteUser(@PathVariable("userId") UUID userId,
-                                                                  @RequestHeader("X-User-Role") Role role
+                                                                  @RequestHeader("X-User-Role") Role role,
+                                                                  @RequestHeader("X-User-Id") UUID requesterId
     ){
         if(MASTER.equals(role)){
-            DeleteResponse response = userService.deleteUser(userId);
+            DeleteResponse response = userService.deleteUser(userId, requesterId);
             return ResponseEntity.ok(ApiResponse.ok(response));
         }
         throw new BusinessException(UserErrorCode.ACCESS_DENIED);
-
-
     }
-
-
-
-
 }
 
