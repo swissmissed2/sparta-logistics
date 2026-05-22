@@ -11,6 +11,9 @@ import com.sparta.logistics.hub.hub.repository.HubRepository;
 import com.sparta.logistics.hub.hubroute.entity.HubRoute;
 import com.sparta.logistics.hub.hubroute.repository.HubRouteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +31,7 @@ public class HubService {
     private final HubRouteRepository hubRouteRepository;
 
 
+    @CacheEvict(value = "hubList", allEntries = true)
     @Transactional
     public HubCreateResponse createHub(CreateHubRequest request) {
 
@@ -53,7 +57,15 @@ public class HubService {
         }
     }
 
-    // todo: 반복적인 조회와 낮은 빈도의 수정을 고려하여 캐싱 적용
+    @Cacheable(
+            value = "hubList",
+            key = "#name +" +
+                    " ':' + #address +" +
+                    " ':' + #status +" +
+                    " ':' + #pageable.pageNumber +" +
+                    " ':' + #pageable.pageSize +" +
+                    " ':' + #pageable.sort.toString()"
+    )
     @Transactional(readOnly = true)
     public Page<HubListResponse> getHubList(String name, String address, HubStatus status, Pageable pageable) {
 
@@ -61,7 +73,7 @@ public class HubService {
                 .map(HubListResponse::from);
     }
 
-    // todo: 반복적인 조회와 낮은 빈도의 수정을 고려하여 캐싱 적용
+    @Cacheable(value = "hubs", key = "#hubId")
     @Transactional(readOnly = true)
     public HubDetailResponse getHub(UUID hubId) {
 
@@ -74,6 +86,10 @@ public class HubService {
         return hubRepository.existsByIdAndDeletedAtIsNull(hubId);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "hubs", key = "#hubId"),
+            @CacheEvict(value = "hubList", allEntries = true)
+    })
     @Transactional
     public HubUpdateResponse updateHub(UUID hubId, UpdateHubRequest request) {
 
@@ -101,8 +117,11 @@ public class HubService {
         }
     }
 
-    // todo: 연관 허브 경로 비활성화
     // todo: 배송 담당자 논리 삭제 연동
+    @Caching(evict = {
+            @CacheEvict(value = "hubs", key = "#hubId"),
+            @CacheEvict(value = "hubList", allEntries = true)
+    })
     @Transactional
     public HubDeleteResponse deleteHub(UUID hubId, UUID userId) {
 

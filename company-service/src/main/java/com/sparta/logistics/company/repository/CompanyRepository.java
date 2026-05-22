@@ -24,7 +24,7 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
     @Query("""
         SELECT c FROM Company c
         WHERE (:name IS NULL OR c.name LIKE %:name%)
-         AND (:type IN NULL OR c.type = :type)
+         AND (:type IS NULL OR c.type = :type)
          AND (:hubId IS NULL OR c.hubId = :hubId)
          AND (:status IS NULL OR c.status = :status)
     """)

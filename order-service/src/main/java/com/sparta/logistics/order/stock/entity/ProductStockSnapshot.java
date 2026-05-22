@@ -1,4 +1,4 @@
-package com.sparta.logistics.order.orderitem.entity;
+package com.sparta.logistics.order.stock.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -13,6 +13,7 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductStockSnapshot {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -33,12 +34,18 @@ public class ProductStockSnapshot {
     private LocalDateTime syncedAt;
 
     public static ProductStockSnapshot create(UUID productId, UUID hubId, Integer available, Long hubStockVersion) {
-        ProductStockSnapshot productStockSnapshot = new ProductStockSnapshot();
-        productStockSnapshot.productId = productId;
-        productStockSnapshot.hubId = hubId;
-        productStockSnapshot.available = available;
-        productStockSnapshot.hubStockVersion = hubStockVersion;
-        productStockSnapshot.syncedAt = LocalDateTime.now();
-        return productStockSnapshot;
+        ProductStockSnapshot snapshot = new ProductStockSnapshot();
+        snapshot.productId = productId;
+        snapshot.hubId = hubId;
+        snapshot.available = available;
+        snapshot.hubStockVersion = hubStockVersion;
+        snapshot.syncedAt = LocalDateTime.now();
+        return snapshot;
+    }
+
+    public void update(Integer available, Long hubStockVersion) {
+        this.available = available;
+        this.hubStockVersion = hubStockVersion;
+        this.syncedAt = LocalDateTime.now();
     }
 }

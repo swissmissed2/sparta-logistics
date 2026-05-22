@@ -1,7 +1,7 @@
 package com.sparta.logistics.company.client.feign;
 
-import com.sparta.logistics.company.client.dto.HubExistsResponse;
-import com.sparta.logistics.company.client.dto.HubResponse;
+import com.sparta.logistics.company.client.model.HubExistsResponse;
+import com.sparta.logistics.company.client.model.HubResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

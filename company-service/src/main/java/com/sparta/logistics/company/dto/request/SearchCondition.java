@@ -1,8 +1,5 @@
 package com.sparta.logistics.company.dto.request;
 
-import com.sparta.logistics.company.entity.CompanyStatus;
-import com.sparta.logistics.company.entity.CompanyType;
-
 import java.util.UUID;
 
 /**
@@ -10,7 +7,7 @@ import java.util.UUID;
  */
 public record SearchCondition(
         String name,
-        CompanyType type,
+        String type,
         UUID hubId,
-        CompanyStatus status
+        String status
 ) {}

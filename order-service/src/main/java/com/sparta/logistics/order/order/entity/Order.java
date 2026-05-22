@@ -92,6 +92,8 @@ public class Order extends BaseEntity {
     }
 
     public boolean isModifiable() {
-        return this.status != OrderStatus.CANCELLED && this.status != OrderStatus.COMPLETED;
+        return this.status != OrderStatus.CANCELLED
+                && this.status != OrderStatus.COMPLETED
+                && this.status != OrderStatus.IN_DELIVERY;
     }
 }
