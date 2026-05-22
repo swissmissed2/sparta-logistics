@@ -1,4 +1,4 @@
-package com.sparta.logistics.hub.hubstock.helper;
+package com.sparta.logistics.hub.hubstock.service.helper;
 
 import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.hub.exception.HubStockErrorCode;

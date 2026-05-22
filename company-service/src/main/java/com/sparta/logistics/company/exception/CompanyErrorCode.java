@@ -20,7 +20,11 @@ public enum CompanyErrorCode implements ErrorCode {
     COMPANY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMPANY_403", "해당 업체에 대한 접근 권한이 없습니다."),
 
     // 404대
-    COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMPANY_001", "업체를 찾을 수 없습니다.");
+    COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMPANY_001", "업체를 찾을 수 없습니다."),
+
+    // 503대
+    HUB_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "PRODUCT_503", "Hub Service를 현재 사용할 수 없습니다.");
+
 
     private final HttpStatus status;
     private final String code;

@@ -12,7 +12,7 @@ import com.sparta.logistics.hub.hubstock.dto.response.HubStockCreateResponse;
 import com.sparta.logistics.hub.hubstock.dto.response.HubStockListResponse;
 import com.sparta.logistics.hub.hubstock.entity.HubStock;
 import com.sparta.logistics.hub.hubstock.enums.HubStockChangeType;
-import com.sparta.logistics.hub.hubstock.helper.HubStockLockHelper;
+import com.sparta.logistics.hub.hubstock.service.helper.HubStockLockHelper;
 import com.sparta.logistics.hub.hubstock.repository.HubStockRepository;
 import com.sparta.logistics.hub.hubstocklog.entity.HubStockLog;
 import com.sparta.logistics.hub.hubstocklog.repository.HubStockLogRepository;

@@ -15,6 +15,7 @@ import com.sparta.logistics.company.entity.Company;
 import com.sparta.logistics.company.entity.CompanyStatus;
 import com.sparta.logistics.company.entity.CompanyType;
 import com.sparta.logistics.company.repository.CompanyRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -182,11 +183,13 @@ public class CompanyService {
     }
 
     private void validateHubExists(UUID hubId) {
-        // Hub Service FeignClient 호출
-        boolean exists = hubFeignClient.checkHubExists(hubId).exists();
-        // 존재 X → 400
-        if (!exists) {
+        try {
+            // Hub Service FeignClient 호출
+            hubFeignClient.checkHubExists(hubId);
+        } catch (FeignException.NotFound e) {
             throw new BusinessException(CompanyErrorCode.HUB_NOT_FOUND);
+        } catch (FeignException e) {
+            throw new BusinessException(CompanyErrorCode.HUB_SERVICE_UNAVAILABLE);
         }
     }
 
