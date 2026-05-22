@@ -10,12 +10,12 @@ import java.util.UUID;
 
 @Builder
 public record SignupResponse( // 회원가입 응답
-                              UUID userId,
-                              String username,
-                              String name,
-                              Role role,
-                              UserStatus status,
-                              LocalDateTime createdAt
+        UUID userId,
+        String username,
+        String name,
+        Role role,
+        UserStatus status,
+        LocalDateTime createdAt
 ) {
     public static SignupResponse from(UserResult userResult) {
         return SignupResponse.builder()
