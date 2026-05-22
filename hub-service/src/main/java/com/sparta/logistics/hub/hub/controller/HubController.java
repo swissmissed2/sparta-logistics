@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -77,16 +78,14 @@ public class HubController {
     /**
      * 허브 존재 여부 확인 api (내부 서비스 간 통신용)
      * @param hubId 허브 ID
-     * @return 200 OK (존재), 404 Not Found (없음)
+     * @return 200 OK + { "exists": true/false }
      */
     @GetMapping("/{hubId}/exists")
-    public ResponseEntity<Void> isHubExists(@PathVariable UUID hubId) {
+    public ResponseEntity<Map<String, Boolean>> isHubExists(@PathVariable UUID hubId) {
 
         boolean exists = hubService.existsHub(hubId);
 
-        if (!exists)
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 
     /**
