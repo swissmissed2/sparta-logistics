@@ -1,5 +1,6 @@
 package com.sparta.logistics.delivery.entity;
 
+import com.sparta.logistics.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Table(name = "p_delivery")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class DeliveryEntity {
+public class DeliveryEntity extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

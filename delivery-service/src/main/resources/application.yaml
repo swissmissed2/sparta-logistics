@@ -2,29 +2,30 @@ server:
   port: 19096
 
 spring:
+  application:
+    name: delivery-service
+  config:
+    import: optional:configserver:http://localhost:8888
+# TODO: h2 나 redis 필요하면 추가
 #  h2:
 #    console:
 #      enabled: true
-#  application:
-#    name: delivery-service
-#  config:
-#    import: optional:configserver:http://localhost:8888
   datasource:
-    #url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}?currentSchema=schema_delivery
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}?currentSchema=schema_delivery
+    #url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:
-    hibernate:
-      ddl-auto: update
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        default_schema: schema_delivery
+  sql:
+    init:
+      mode: always
 
-#  jpa:
-#    properties:
-#      hibernate:
-#        default_schema: schema_hub
-
-#eureka:
-#  instance:
-#    instance-id: ${spring.application.name}:${server.port}
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${server.port}

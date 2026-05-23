@@ -11,6 +11,7 @@ public record DeliveryDetailResponse(
         String deliveryAddress
 ) {
     // 엔티티 TO DTO
+    // TODO: deliveryEntity 대신 delivery
     public static DeliveryDetailResponse from(DeliveryEntity deliveryEntity) {
         return new DeliveryDetailResponse(
                 deliveryEntity.getId(),
