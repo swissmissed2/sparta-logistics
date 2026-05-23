@@ -12,8 +12,10 @@ import com.sparta.logistics.hub.hubstock.dto.response.HubStockCreateResponse;
 import com.sparta.logistics.hub.hubstock.dto.response.HubStockListResponse;
 import com.sparta.logistics.hub.hubstock.entity.HubStock;
 import com.sparta.logistics.hub.hubstock.enums.HubStockChangeType;
-import com.sparta.logistics.hub.hubstock.helper.HubStockLockHelper;
+import com.sparta.logistics.hub.hubstock.service.helper.HubStockLockHelper;
 import com.sparta.logistics.hub.hubstock.repository.HubStockRepository;
+import com.sparta.logistics.hub.hubstocklog.entity.HubStockLog;
+import com.sparta.logistics.hub.hubstocklog.repository.HubStockLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -31,6 +33,7 @@ public class HubStockService {
     private final HubStockRepository hubStockRepository;
     private final HubRepository hubRepository;
     private final HubStockLockHelper hubStockLockHelper;
+    private final HubStockLogRepository hubStockLogRepository;
 
     private static final int MAX_RETRY = 3;
 
@@ -51,6 +54,16 @@ public class HubStockService {
             HubStock hubStock = HubStock.create(hub, request.getProductId(), request.getInitialQuantity());
             HubStock savedStock = hubStockRepository.save(hubStock);
             hubStockRepository.flush();
+
+            // 재고 변경 이력 생성
+            hubStockLogRepository.save(HubStockLog.create(
+                    savedStock,
+                    request.getInitialQuantity(),
+                    0,
+                    request.getInitialQuantity(),
+                    HubStockChangeType.INBOUND
+            ));
+
             return HubStockCreateResponse.from(savedStock);
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(HubStockErrorCode.HUB_STOCK_ALREADY_EXISTS);

@@ -18,6 +18,10 @@ spring:
       hibernate:
         default_schema: schema_order
 
+feign:
+  circuitbreaker:
+    enabled: true
+
 eureka:
   instance:
     instance-id: ${spring.application.name}:${server.port}

@@ -12,6 +12,7 @@ spring:
     password: ${POSTGRES_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
   jpa:
+    defer-datasource-initialization: true
     properties:
       hibernate:
         default_schema: schema_hub

@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -59,14 +61,21 @@ public class OrderService {
 
         Order order = Order.create(requesterCompanyId, receiverCompanyId, userId, dueDate, requestMemo);
 
-        items.forEach(item -> {
-            ProductResponse product = fetchProduct(item.getProductId());
+        // 동일 productId의 quantity 합산 (중복 OrderItem row 생성 방지)
+        Map<UUID, Integer> mergedItems = items.stream()
+                .collect(Collectors.groupingBy(
+                        OrderItemRequest::getProductId,
+                        Collectors.summingInt(OrderItemRequest::getQuantity)
+                ));
+
+        mergedItems.forEach((productId, quantity) -> {
+            ProductResponse product = fetchProduct(productId);
             OrderItem orderItem = OrderItem.create(
                     order,
-                    item.getProductId(),
+                    productId,
                     product.name(),
                     product.price(),
-                    item.getQuantity()
+                    quantity
             );
             order.addOrderItem(orderItem);
         });

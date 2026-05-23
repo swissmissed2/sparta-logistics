@@ -15,6 +15,10 @@ spring:
     properties:
       hibernate:
         default_schema: schema_company
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 eureka:
   instance:
@@ -23,4 +27,4 @@ eureka:
 logging:
   level:
     com.sparta.logistics.company: DEBUG
-    org.hibernate.sql: DEBUG
+    org.hibernate.SQL: DEBUG

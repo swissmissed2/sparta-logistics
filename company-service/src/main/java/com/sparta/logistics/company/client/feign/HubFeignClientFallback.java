@@ -1,7 +1,8 @@
 package com.sparta.logistics.company.client.feign;
 
-import com.sparta.logistics.company.client.model.HubExistsResponse;
+import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.company.client.model.HubResponse;
+import com.sparta.logistics.company.exception.CompanyErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +20,9 @@ import java.util.UUID;
 public class HubFeignClientFallback implements HubFeignClient {
 
     @Override
-    public HubExistsResponse checkHubExists(UUID hubId) {
+    public void checkHubExists(UUID hubId) {
         log.warn("[HubFeignClient Fallback] Hub Service 응답 없음. hubId={}", hubId);
-        // Fallback: 서킷 오픈 시 허브가 없는 것으로 처리 → 주문 보호
-        return new HubExistsResponse(false);
+        throw new BusinessException(CompanyErrorCode.HUB_NOT_FOUND);
     }
 
     @Override

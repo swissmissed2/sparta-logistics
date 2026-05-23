@@ -4,6 +4,7 @@ import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.company.client.feign.HubCacheService;
 import com.sparta.logistics.company.client.feign.HubFeignClient;
+import com.sparta.logistics.company.client.feign.ProductFeignClient;
 import com.sparta.logistics.company.exception.CompanyErrorCode;
 import com.sparta.logistics.company.dto.request.CreateRequest;
 import com.sparta.logistics.company.dto.request.SearchCondition;
@@ -14,6 +15,7 @@ import com.sparta.logistics.company.entity.Company;
 import com.sparta.logistics.company.entity.CompanyStatus;
 import com.sparta.logistics.company.entity.CompanyType;
 import com.sparta.logistics.company.repository.CompanyRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,6 +36,7 @@ public class CompanyService {
     private final CompanyRepository companyRepository;
     private final HubFeignClient hubFeignClient;
     private final HubCacheService hubCacheService;
+    private final ProductFeignClient productFeignClient;
 
     // -------------------------------------------------------
     // 생성: MASTER, HUB_MANAGER(담당 허브)
@@ -144,10 +147,18 @@ public class CompanyService {
             UUID requestUserHubId) {
 
         Company company = findActiveCompanyOrThrow(companyId);
-
         validateDeletePermission(requestUserRole, requestUserHubId, company);
 
         company.delete(requestUserId);
+
+        // 연관 상품 일괄 Soft Delete 요청
+        // 실패해도 업체 삭제는 유지 (보상 트랜잭션 범위 밖)
+        // → SA 문서 기준 Orchestration Saga 미적용 범위이므로 try-catch로 처리
+        try {
+            productFeignClient.deleteProductsByCompanyId(companyId);
+        } catch (Exception e) {
+            log.error("[CompanyService] 연관 상품 삭제 실패. companyId={}", companyId, e);
+        }
 
         log.info("[CompanyService] 업체 논리 삭제. companyId={}, deletedBy={}",
                 companyId, requestUserId);
@@ -172,11 +183,13 @@ public class CompanyService {
     }
 
     private void validateHubExists(UUID hubId) {
-        // Hub Service FeignClient 호출
-        boolean exists = hubFeignClient.checkHubExists(hubId).exists();
-        // 존재 X → 400
-        if (!exists) {
+        try {
+            // Hub Service FeignClient 호출
+            hubFeignClient.checkHubExists(hubId);
+        } catch (FeignException.NotFound e) {
             throw new BusinessException(CompanyErrorCode.HUB_NOT_FOUND);
+        } catch (FeignException e) {
+            throw new BusinessException(CompanyErrorCode.HUB_SERVICE_UNAVAILABLE);
         }
     }
 

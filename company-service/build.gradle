@@ -15,6 +15,6 @@ dependencies {
     // OpenFeign (서비스 간 통신)
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
-    // Security (필요한 서비스만 유지)
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // Redis (캐싱)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }

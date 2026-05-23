@@ -26,7 +26,6 @@ public class HubCacheService {
         return hubFeignClient.getHub(hubId);
     }
 
-    // TODO: 허브 정보 변경 시 캐시 무효화(Cache Evict) 처리 필요
     @Cacheable(value = "hubs-batch", key = "#hubIds.toString()")
     public Map<UUID, String> getHubNameMap(List<UUID> hubIds) {
         return hubFeignClient.getHubsByIds(hubIds)
