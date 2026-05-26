@@ -1,5 +1,6 @@
 package com.sparta.logistics.hub.hubstock.controller;
 
+import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.response.ApiResponse;
 import com.sparta.logistics.hub.hubstock.dto.request.AdjustHubStockRequest;
 import com.sparta.logistics.hub.hubstock.dto.request.CreateHubStockRequest;
@@ -27,9 +28,12 @@ public class HubStockController {
     @PostMapping
     public ResponseEntity<ApiResponse<HubStockCreateResponse>> createHubStock(
             @PathVariable UUID hubId,
-            @RequestBody @Valid CreateHubStockRequest request) {
+            @RequestBody @Valid CreateHubStockRequest request,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role,
+            @RequestHeader(value = "X-User-HubId", required = false) UUID userHubId) {
 
-        HubStockCreateResponse response = hubStockService.createHubStock(hubId, request);
+        HubStockCreateResponse response = hubStockService.createHubStock(hubId, request, role, userHubId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("허브 재고가 생성되었습니다.", response));
@@ -39,9 +43,13 @@ public class HubStockController {
     public ResponseEntity<ApiResponse<Page<HubStockListResponse>>> getHubStockList(
             @PathVariable UUID hubId,
             @RequestParam(required = false) UUID productId,
-            Pageable pageable) {
+            Pageable pageable,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role,
+            @RequestHeader(value = "X-User-HubId", required = false) UUID userHubId) {
 
-        Page<HubStockListResponse> response = hubStockService.getHubStockList(hubId, productId, pageable);
+        Page<HubStockListResponse> response = hubStockService
+                .getHubStockList(hubId, productId, pageable, role, userHubId);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -50,9 +58,13 @@ public class HubStockController {
     public ResponseEntity<ApiResponse<HubStockAdjustResponse>> adjustHubStock(
             @PathVariable UUID hubId,
             @PathVariable UUID stockId,
-            @RequestBody @Valid AdjustHubStockRequest request) {
+            @RequestBody @Valid AdjustHubStockRequest request,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role,
+            @RequestHeader(value = "X-User-HubId", required = false) UUID userHubId) {
 
-        HubStockAdjustResponse response = hubStockService.adjustHubStock(hubId, stockId, request);
+        HubStockAdjustResponse response = hubStockService
+                .adjustHubStock(hubId, stockId, request, role, userHubId);
 
         return ResponseEntity.ok(ApiResponse.ok("허브 재고가 수정되었습니다.", response));
     }

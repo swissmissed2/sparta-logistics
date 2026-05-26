@@ -1,5 +1,6 @@
 package com.sparta.logistics.hub.hubstocklog.service;
 
+import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.hub.exception.HubErrorCode;
 import com.sparta.logistics.hub.exception.HubStockErrorCode;
@@ -26,7 +27,10 @@ public class HubStockLogService {
 
     @Transactional(readOnly = true)
     public Page<HubStockLogListResponse> getHubStockLogList(
-            UUID hubId, UUID stockId, HubStockChangeType changeType, Pageable pageable) {
+            UUID hubId, UUID stockId, HubStockChangeType changeType, Pageable pageable, Role role, UUID userHubId) {
+
+        // 권한 검증
+        checkHubStockPermission(role, userHubId, hubId);
 
         // 허브 존재 여부 검증
         if (hubRepository.existsByIdAndDeletedAtIsNull(hubId)) {
@@ -40,5 +44,19 @@ public class HubStockLogService {
 
         return hubStockLogRepository.findAllByCondition(stockId, hubId, changeType, pageable)
                 .map(log -> HubStockLogListResponse.from(log, stockId));
+    }
+
+    private void checkHubStockPermission(Role role, UUID userHubId, UUID hubId) {
+
+        if (role == Role.MASTER) return;
+
+        if (role == Role.HUB_MANAGER) {
+            if (userHubId == null || !userHubId.equals(hubId)) {
+                throw new BusinessException(HubStockErrorCode.HUB_STOCK_FORBIDDEN);
+            }
+            return;
+        }
+
+        throw new BusinessException(HubStockErrorCode.HUB_STOCK_FORBIDDEN);
     }
 }

@@ -1,5 +1,6 @@
 package com.sparta.logistics.hub.hubstocklog.controller;
 
+import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.response.ApiResponse;
 import com.sparta.logistics.hub.hubstock.enums.HubStockChangeType;
 import com.sparta.logistics.hub.hubstocklog.dto.response.HubStockLogListResponse;
@@ -24,10 +25,13 @@ public class HubStockLogController {
             @PathVariable UUID hubId,
             @PathVariable UUID stockId,
             @RequestParam(required = false) HubStockChangeType changeType,
-            Pageable pageable) {
+            Pageable pageable,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role,
+            @RequestHeader(value = "X-User-HubId", required = false) UUID userHubId) {
 
-        Page<HubStockLogListResponse> response =
-                hubStockLogService.getHubStockLogList(hubId, stockId, changeType, pageable);
+        Page<HubStockLogListResponse> response = hubStockLogService
+                .getHubStockLogList(hubId, stockId, changeType, pageable, role, userHubId);
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }

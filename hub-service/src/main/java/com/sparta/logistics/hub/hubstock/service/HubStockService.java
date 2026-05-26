@@ -1,5 +1,6 @@
 package com.sparta.logistics.hub.hubstock.service;
 
+import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.hub.exception.HubErrorCode;
 import com.sparta.logistics.hub.exception.HubStockErrorCode;
@@ -39,7 +40,10 @@ public class HubStockService {
 
     // todo: product도 존재 여부를 체크 고민
     @Transactional
-    public HubStockCreateResponse createHubStock(UUID hubId, CreateHubStockRequest request) {
+    public HubStockCreateResponse createHubStock(UUID hubId, CreateHubStockRequest request, Role role, UUID userHubId) {
+
+        // 허브 재고 권한 검증
+        checkHubStockPermission(role, userHubId, hubId);
 
         Hub hub = hubRepository.findByIdAndDeletedAtIsNull(hubId)
                 .orElseThrow(() -> new BusinessException(HubErrorCode.HUB_NOT_FOUND));
@@ -71,14 +75,20 @@ public class HubStockService {
     }
 
     @Transactional(readOnly = true)
-    public Page<HubStockListResponse> getHubStockList(UUID hubId, UUID productId, Pageable pageable) {
+    public Page<HubStockListResponse> getHubStockList(UUID hubId, UUID productId, Pageable pageable, Role role, UUID userHubId) {
+
+        // 허브 재고 권한 검증
+        checkHubStockPermission(role, userHubId, hubId);
 
         return hubStockRepository.findAllByCondition(hubId, productId, pageable)
                 .map(HubStockListResponse::from);
     }
 
     @Transactional
-    public HubStockAdjustResponse adjustHubStock(UUID hubId, UUID stockId, AdjustHubStockRequest request) {
+    public HubStockAdjustResponse adjustHubStock(UUID hubId, UUID stockId, AdjustHubStockRequest request, Role role, UUID userHubId) {
+
+        // 허브 재고 권한 검증
+        checkHubStockPermission(role, userHubId, hubId);
 
         // changeType 유효성 검증
         if (request.getChangeType() != HubStockChangeType.INBOUND &&
@@ -99,5 +109,17 @@ public class HubStockService {
         throw new BusinessException(HubStockErrorCode.HUB_STOCK_ADJUST_FAILED);
     }
 
+    private void checkHubStockPermission(Role role, UUID userHubId, UUID hubId) {
 
+        if (role == Role.MASTER) return;
+
+        if (role == Role.HUB_MANAGER) {
+            if (userHubId == null || !userHubId.equals(hubId)) {
+                throw new BusinessException(HubStockErrorCode.HUB_STOCK_FORBIDDEN);
+            }
+            return;
+        }
+
+        throw new BusinessException(HubStockErrorCode.HUB_STOCK_FORBIDDEN);
+    }
 }

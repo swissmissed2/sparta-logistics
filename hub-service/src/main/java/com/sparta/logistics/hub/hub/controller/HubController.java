@@ -1,5 +1,6 @@
 package com.sparta.logistics.hub.hub.controller;
 
+import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.response.ApiResponse;
 import com.sparta.logistics.hub.hub.dto.request.UpdateHubRequest;
 import com.sparta.logistics.hub.hub.dto.response.*;
@@ -26,15 +27,17 @@ public class HubController {
 
     /**
      * 허브 생성 api
-     * todo: @PreAuthorize("hasRole('MASTER')") 적용 - X-User-Role 헤더 기반 SecurityContext 세팅 필터 추가 후
      * @param request 허브 생성 요청 DTO
      * @return 생성된 허브 정보
      */
     @PostMapping
-    public ResponseEntity<ApiResponse<HubCreateResponse>> createHub(@RequestBody @Valid CreateHubRequest request) {
+    public ResponseEntity<ApiResponse<HubCreateResponse>> createHub(
+            @RequestBody @Valid CreateHubRequest request,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role) {
 
 
-        HubCreateResponse response = hubService.createHub(request);
+        HubCreateResponse response = hubService.createHub(request, role);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("허브가 생성되었습니다.", response));
@@ -42,7 +45,6 @@ public class HubController {
 
     /**
      * 허브 목록 조회 api
-     * todo: @PreAuthorize("isAuthenticated()") 적용 - X-User-Role 헤더 기반 SecurityContext 세팅 필터 추가 후
      * @param name
      * @param address
      * @param status
@@ -63,7 +65,6 @@ public class HubController {
 
     /**
      * 허브 단건 조회 api
-     * todo: @PreAuthorize("isAuthenticated()") 적용 - X-User-Role 헤더 기반 SecurityContext 세팅 필터 추가 후
      * @param hubId 허브 ID
      * @return 허브 상세 정보
      */
@@ -92,23 +93,24 @@ public class HubController {
 
     /**
      * 허브 수정 api
-     * todo: @PreAuthorize("hasRole('MASTER')") 적용 - X-User-Role 헤더 기반 SecurityContext 세팅 필터 추가 후
      * @param hubId 허브 ID
      * @param request 허브 수정 요청 DTO
      * @return 수정된 허브 정보
      */
     @PutMapping("/{hubId}")
-    public ResponseEntity<ApiResponse<HubUpdateResponse>> updateHub(@PathVariable UUID hubId,
-                                                                    @RequestBody @Valid UpdateHubRequest request) {
+    public ResponseEntity<ApiResponse<HubUpdateResponse>> updateHub(
+            @PathVariable UUID hubId,
+            @RequestBody @Valid UpdateHubRequest request,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role) {
 
-        HubUpdateResponse response = hubService.updateHub(hubId, request);
+        HubUpdateResponse response = hubService.updateHub(hubId, request, role);
 
         return ResponseEntity.ok(ApiResponse.ok("허브가 수정되었습니다.", response));
     }
 
     /**
      * 허브 삭제 api
-     * todo: @PreAuthorize("hasRole('MASTER')") 적용 - X-User-Role 헤더 기반 SecurityContext 세팅 필터 추가 후
      * @param hubId 허브 ID
      * @param userId 삭제 요청자 ID (X-User-Id 헤더)
      * @return 삭제된 허브 정보
@@ -116,9 +118,10 @@ public class HubController {
     @DeleteMapping("/{hubId}")
     public ResponseEntity<ApiResponse<HubDeleteResponse>> deleteHub(
             @PathVariable UUID hubId,
-            @RequestHeader("X-User-Id") UUID userId) {
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-User-Role") Role role) {
 
-        HubDeleteResponse response = hubService.deleteHub(hubId, userId);
+        HubDeleteResponse response = hubService.deleteHub(hubId, userId, role);
 
         return ResponseEntity.ok(ApiResponse.ok("허브가 삭제되었습니다.", response));
     }
