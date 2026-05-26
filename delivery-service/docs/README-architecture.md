@@ -85,7 +85,7 @@
 
 ---
 
-## 4. Kafka 이벤트 흐름 (전체)
+## 4. [수정중] Kafka 이벤트 흐름 (전체)
 
 ```
 order.created          ──▶  hub-service        : 재고 예약 트리거
@@ -123,7 +123,7 @@ sparta-logistics-ai/
 
 ---
 
-## 6. 서비스 간 의존 관계
+## 6. 서비스 간 의존 관계 (배송)
 
 ```
 delivery-service
@@ -159,3 +159,6 @@ delivery-service
   }
 }
 ```
+
+## 8. 배송 관련 알림 기능
+> 구체적 구현 방식 협의 필요

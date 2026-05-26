@@ -7,7 +7,7 @@
 ```
                      ┌─────────────────────────────────────────┐
                      │                CANCELLED                │
-                     │  (모든 상태에서 CANCELLED 가능,          │
+                     │  (모든 상태에서 CANCELLED 가능,            │
                      │   COMPLETED 제외)                        │
                      └─────────────────────────────────────────┘
                               ↑         ↑         ↑        ↑
@@ -15,7 +15,7 @@
    [Kafka stock.reserved]     │         │         │        │
          ↓                    │         │         │        │
     ┌─────────┐      ┌────────────┐  ┌───────────┐  ┌──────────────────────┐
-    │ CREATED │─────▶│ HUB_WAITING│─▶│ HUB_MOVING│─▶│ DESTINATION_HUB_    │
+    │ CREATED │─────▶│HUB_WAITING│─▶│ HUB_MOVING│─▶│ DESTINATION_HUB_    │
     └─────────┘      └────────────┘  └───────────┘  │     ARRIVED         │
                                                      └─────────────────────┘
                                                                 │
@@ -45,15 +45,15 @@
 
 ## 3. 각 상태 의미
 
-| 상태 | 의미 | 자동 설정 필드 |
-|------|------|-------------|
-| `CREATED` | Kafka `stock.reserved` 소비 후 배송 생성됨 | — |
-| `HUB_WAITING` | 출발 허브에서 허브 간 이동 대기 중 | — |
-| `HUB_MOVING` | 허브 간 이동 중 | — |
-| `DESTINATION_HUB_ARRIVED` | 목적지 허브 도착 | — |
-| `OUT_FOR_DELIVERY` | 목적지 허브 → 수령 업체로 최종 배송 출발 | `startedAt = LocalDateTime.now()` |
+| 상태 | 의미 | 자동 설정 필드                            |
+|------|------|-------------------------------------|
+| `CREATED` | Kafka `stock.reserved` 소비 후 배송 생성됨 | 현재 구현 중                             |
+| `HUB_WAITING` | 출발 허브에서 허브 간 이동 대기 중 | —                                   |
+| `HUB_MOVING` | 허브 간 이동 중 | —                                   |
+| `DESTINATION_HUB_ARRIVED` | 목적지 허브 도착 | —                                   |
+| `OUT_FOR_DELIVERY` | 목적지 허브 → 수령 업체로 최종 배송 출발 | `startedAt = LocalDateTime.now()`   |
 | `COMPLETED` | 배송 완료 | `completedAt = LocalDateTime.now()` |
-| `CANCELLED` | 취소됨 | — |
+| `CANCELLED` | 취소됨 | —                                   |
 
 ---
 

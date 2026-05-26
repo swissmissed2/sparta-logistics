@@ -52,9 +52,9 @@ services:
 
 ```dotenv
 # PostgreSQL
-POSTGRES_USER=sparta
-POSTGRES_PASSWORD=sparta1234
-POSTGRES_DB=sparta_logistics
+POSTGRES_USER=YOUR_NAME
+POSTGRES_PASSWORD=YOUR_PASSWORD
+POSTGRES_DB=logistics
 
 # Redis (redis.conf에서 참조)
 # 별도 설정 불필요 (기본값 사용)
@@ -66,10 +66,10 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ZIPKIN_ENDPOINT=http://localhost:9411/api/v2/spans
 
 # JWT (api-gateway)
-JWT_SECRET=aGVsbG9Xb3JsZFNlY3JldEtleUZvckpXVEF1dGgxMjM0NTY=
+JWT_SECRET=YOUR_JWT_SECRET_KEY
 ```
 
-> `.env` 파일은 `.gitignore`에 포함되어 있습니다. 팀 공유 시 별도 채널로 전달하세요.
+> `.env` 형식은 `.env.example`에서 확인 가능합니다.
 
 ---
 
@@ -87,11 +87,11 @@ CREATE SCHEMA IF NOT EXISTS orders;
 ```
 
 > 현재 개발 환경: `ddl-auto: create-drop` (애플리케이션 기동 시 테이블 자동 생성/삭제)  
-> 운영 전환 시: Flyway 도입 + `ddl-auto: validate` 변경 예정
+> 운영 전환 시: Flyway 도입 + `ddl-auto: validate` 변경하는 방향을 고려 중
 
 ---
 
-## 5. Kafka 설정 상세
+## 5. [ 수정 중 ] Kafka 설정 상세
 
 ```yaml
 # 호스트에서 접속 (로컬 개발): localhost:9092

@@ -27,15 +27,15 @@ cd sparta-logistics-ai
 루트 디렉토리에 `.env` 파일을 생성합니다.
 
 ```dotenv
-POSTGRES_USER=sparta
-POSTGRES_PASSWORD=sparta1234
-POSTGRES_DB=sparta_logistics
+POSTGRES_USER=YOUR_NAME
+POSTGRES_PASSWORD=YOUR_PASSWORD
+POSTGRES_DB=logistics
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ZIPKIN_ENDPOINT=http://localhost:9411/api/v2/spans
-JWT_SECRET=aGVsbG9Xb3JsZFNlY3JldEtleUZvckpXVEF1dGgxMjM0NTY=
+JWT_SECRET=YOUR_JWT_SECRET_KEY
 ```
 
-> 실제 시크릿 값은 팀 공유 채널(Slack/Notion)에서 확인하세요.
+> .env.example 참고
 
 ---
 

@@ -137,7 +137,8 @@ DELETE /api/v1/deliveries/{deliveryId}
 
 ---
 
-## 2. 배송담당자 API (`/api/v1/delivery-managers`)
+## 2. [ 수정 요망 ] 배송담당자 API (`/api/v1/delivery-managers`)
+> 업체 배송 담당자와 허브 배송 담당자 join 조회로 수정 필요
 
 ### 2-1. 배송담당자 생성
 
@@ -255,7 +256,8 @@ DELETE /api/v1/delivery-managers/{managerId}
 
 ---
 
-## 3. 배송경로 API (`/api/v1/deliveries/{deliveryId}/routes`)
+## 3. [ 수정 요망 ] 배송경로 API (`/api/v1/deliveries/{deliveryId}/routes`)
+> 다중 배송 건이 하나의 주문으로 합쳐지므로 경로도 여러 개가 필요함. 수정 필요.
 
 ### 3-1. 배송경로 목록 조회
 
@@ -353,3 +355,5 @@ GET /api/v1/deliveries/{deliveryId}/logs
 | `EXCEPTION` | 예외 상황 기록 시 (미구현) |
 
 **권한**: 해당 배송 READ 권한과 동일 (MASTER·HUB_MANAGER·DELIVERY_MANAGER·COMPANY_MANAGER)
+
+## 5. 260526 [2-7 배송담당자 배정] 로직 정비 필요

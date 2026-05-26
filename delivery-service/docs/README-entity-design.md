@@ -27,7 +27,7 @@ p_delivery_manager (DeliveryManagerEntity)
 CREATE TABLE p_delivery (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id                    UUID NOT NULL UNIQUE,        -- 주문 중복 방지 (멱등성)
-    status                      VARCHAR(50) NOT NULL,        -- DeliveryStatus enum
+    status                      VARCHAR(50) NOT NULL,        -- DeliveryStatus ENUM
     source_hub_id               UUID NOT NULL,
     destination_hub_id          UUID NOT NULL,
     current_hub_id              UUID,
@@ -51,12 +51,12 @@ CREATE TABLE p_delivery (
 
 ### 주요 설계 결정
 
-| 항목 | 결정 | 이유 |
-|------|------|------|
-| `order_id UNIQUE` | ✅ | Kafka at-least-once 중복 소비 방어 (멱등성 최종 방어선) |
-| `@Version version` | ✅ | 동시 상태 변경·수정·삭제 Non-Repeatable Read 방지 |
-| `company_delivery_manager_id` | 필드명 명시 | `delivery_manager_id`는 허브/업체 구분 불명확 → 명시적 네이밍 |
-| soft delete | `deleted_at + deleted_by` | BaseEntity.softDelete() 활용, 데이터 보존 |
+| 항목 | 결정 | 이유                                                             |
+|------|------|----------------------------------------------------------------|
+| `order_id UNIQUE` | ✅ | Kafka at-least-once 중복 소비 방어 (멱등성 최종 방어선)                      |
+| `@Version version` | ✅ | 동시 상태 변경·수정·삭제 Non-Repeatable Read 방지                          |
+| `company_delivery_manager_id` | `company_delivery_manager_id`는 배송에만 존재, `hub_delivery_manager_id`는 배송 경로에만 존재 | join 조회가 필요하다는 단점이 있으나, 각각 한 주문에서 배정이 N개와 1개로 나뉘어 구분할 필요성을 느낌. |
+| soft delete | `deleted_at + deleted_by` | BaseEntity.softDelete() 활용, 데이터 보존                             |
 
 ### DeliveryStatus Enum
 
@@ -75,7 +75,7 @@ CREATE TABLE p_delivery_route (
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     delivery_id             UUID NOT NULL REFERENCES p_delivery(id),
     sequence                INT NOT NULL,               -- 0-based 구간 순서
-    route_type              VARCHAR(50) NOT NULL,        -- HUB_TO_HUB | HUB_TO_COMPANY
+    route_type              VARCHAR(50) NOT NULL,        -- HUB_TO_HUB | HUB_TO_COMPANY ENUM
     source_hub_id           UUID NOT NULL,
     destination_hub_id      UUID,                       -- HUB_TO_COMPANY 구간은 null 가능
     estimated_distance      DECIMAL(10,3) NOT NULL,     -- 예상 거리 (km)
@@ -118,7 +118,7 @@ WAITING → IN_TRANSIT → ARRIVED
 CREATE TABLE p_delivery_log (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     delivery_id UUID NOT NULL,             -- 간접 참조 (외래키 없음 — append-only 특성)
-    event_type  VARCHAR(50) NOT NULL,       -- DeliveryEventType enum
+    event_type  VARCHAR(50) NOT NULL,       -- DeliveryEventType ENUM
     status      VARCHAR(50),               -- STATUS_CHANGED 시 변경된 DeliveryStatus
     description VARCHAR(255),
     location    VARCHAR(255),
@@ -133,24 +133,25 @@ CREATE INDEX idx_delivery_log_delivery_recorded
 
 ### 설계 결정
 
-| 항목 | 결정 | 이유 |
-|------|------|------|
-| BaseEntity 미상속 | ✅ | soft delete(`deletedAt`, `deletedBy`) 컬럼이 append-only 테이블에 불필요 |
-| `recordedAt` 독립 필드 | ✅ | 테이블 스펙(`recorded_at`) 일치, `createdAt`과 혼용 방지 |
-| 외래키 없음 | ✅ | append-only 로그 테이블의 INSERT 성능 우선 |
-| 인덱스 최소화 | `(delivery_id, recorded_at)` 복합만 | append-only → UPDATE/DELETE 없으므로 인덱스 최소화 |
-| traceId 필드 없음 | ✅ | 팀 Zipkin 연동 — Zipkin이 자동 수집, 별도 필드 불필요 |
+| 항목 | 결정 | 이유                                               |
+|------|------|--------------------------------------------------|
+| BaseEntity 미상속 | ✅ | 기록 데이터는 수정없이 보존되어야 하므로 append-only 테이블로 결정       |
+| `recordedAt` 독립 필드 | ✅ | `baseEntity`를 상속하지 않으므로  `createdAt`과 혼용 방지      |
+| 외래키 없음 | ✅ | append-only 로그 테이블의 INSERT 성능 우선                 |
+| 인덱스 최소화 | `(delivery_id, recorded_at)` 복합만 | append-only → UPDATE/DELETE 없으므로 인덱스 최소화         |
+| traceId 필드 없음 | ✅ | 추후 Zipkin 연동 예정 — Zipkin이 자동 수집, 별도 필드 불필요       |
 | 동기 저장 | ✅ | 상태 변경과 동일 `@Transactional` — 실패 시 함께 롤백, 데이터 정합성 보장 |
 
 ### DeliveryEventType Enum
 
-| 값 | 기록 시점 |
-|----|---------|
-| `STATUS_CHANGED` | `DeliveryService.changeStatus()` 호출 시 |
-| `ROUTE_UPDATED` | `DeliveryRouteService.updateRoute()` — status → ARRIVED 시 |
-| `CANCELLED` | `DeliveryService.deleteDelivery()` 호출 시 |
-| `MANAGER_ASSIGNED` | 배송담당자 배정 시 (PR-D 이후 구현) |
-| `EXCEPTION` | 예외 상황 기록 시 (미구현) |
+| 값                  | 기록 시점                                                     |
+|--------------------|-----------------------------------------------------------|
+| `CREATED`           | 미구현                                                       |
+| `STATUS_CHANGED`   | `DeliveryService.changeStatus()` 호출 시                     |
+| `ROUTE_UPDATED`    | `DeliveryRouteService.updateRoute()` — status → ARRIVED 시 |
+| `CANCELLED`        | `DeliveryService.deleteDelivery()` 호출 시                   |
+| `MANAGER_ASSIGNED` | 배송담당자 배정 시 (PR-D 이후 구현)                                   |
+| `EXCEPTION`        | 예외 상황 기록 시 (미구현)                                          |
 
 ---
 
@@ -161,10 +162,10 @@ CREATE TABLE p_delivery_manager (
     id                  UUID PRIMARY KEY,       -- 사용자 ID와 동일 (별도 UUID 생성 없음)
     hub_id              UUID NOT NULL,
     slack_id            VARCHAR(100),
-    manager_type        VARCHAR(50) NOT NULL,   -- HUB_DELIVERY | COMPANY_DELIVERY
+    manager_type        VARCHAR(50) NOT NULL,   -- HUB_DELIVERY | COMPANY_DELIVERY ENUM
     delivery_sequence   INT NOT NULL,           -- 라운드 로빈 순서 (배정 시 +1)
     last_assigned_at    TIMESTAMP,
-    status              VARCHAR(50) NOT NULL DEFAULT 'IDLE',
+    status              VARCHAR(50) NOT NULL DEFAULT 'IDLE', -- ENUM
     version             BIGINT NOT NULL DEFAULT 0,  -- 낙관적 락 (동시 배정 충돌 방지)
     -- BaseEntity 상속
     created_at          TIMESTAMP NOT NULL,
@@ -200,11 +201,19 @@ CREATE TABLE p_delivery_manager (
 | `INACTIVE` | 비활성 (배정 제외) |
 | `WITHDRAWN` | 탈퇴 (soft delete 시 자동 설정) |
 
+### 주의할 포인트
+1. 배송 기사 전체 조회 시 join 필요
+2. 배송 상태 전이: 배송기사가 '배송'에서 '루트' 혹은 그 반대로 교체되는 시점에  
+데이터 정합성 문제가 생기지 않도록 상태 변경 이벤트(Event) 관리 로직 수정 필요
+3. 차후 sequence가 무한히 커지는 문제에 대한 대책 필요
+4. 주문과 배송이 1대1이 아닌 1:N개가 되었으므로 배정 로직도 이에 맞게 수정 필요 (260525 결정사항에 따름)
+
 ---
 
-## 6. BaseEntity (공통 모듈)
+## 6. BaseEntity (Common)
 
 ```java
+// 해당 코드는 실제 코드가 아닌, Type 및 주요 Method만 확인하는 용도입니다.
 // common/src/main/java/com/sparta/logistics/common/domain/BaseEntity.java
 @MappedSuperclass
 public abstract class BaseEntity {
@@ -215,9 +224,9 @@ public abstract class BaseEntity {
     LocalDateTime deletedAt;
     UUID deletedBy;
 
-    public void softDelete(UUID actorId) {
+    public void softDelete(UUID deleted_by) {
         this.deletedAt = LocalDateTime.now();
-        this.deletedBy = actorId;
+        this.deletedBy = deleted_by;
     }
 
     public boolean isDeleted() {

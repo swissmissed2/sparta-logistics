@@ -1,6 +1,8 @@
-# Delivery Service — 코드 변경 사항 Before/After
+# Delivery Service — 코드 변경 사항
 
-배송 생성 API 구현으로 인한 파일별 변경 내역입니다.
+  
+- **커밋 해시** `c0b871f`
+- 배송 생성 API 구현으로 인한 파일별 변경 내역입니다.
 
 ---
 
@@ -10,28 +12,16 @@
 
 **위치**: `delivery-service/build.gradle`
 
-**Before**:
+**커밋 6a72aca, 이슈 #150 참고** (`카프카 이벤트 발행`을 위한 설정)
 ```groovy
 dependencies {
     implementation project(':common')
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.kafka:spring-kafka'          // ← 추가
+    testImplementation 'org.springframework.kafka:spring-kafka-test' // ← 추가
     runtimeOnly 'org.postgresql:postgresql'
-    testRuntimeOnly 'com.h2database:h2'
-}
-```
-
-**After**:
-```groovy
-dependencies {
-    implementation project(':common')
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'org.springframework.kafka:spring-kafka'   // ← 추가
-    runtimeOnly 'org.postgresql:postgresql'
-    testRuntimeOnly 'com.h2database:h2'
 }
 ```
 
@@ -41,9 +31,8 @@ dependencies {
 
 **위치**: `delivery-service/src/main/resources/application.yaml`
 
-**Before**: Kafka 설정 없음
-
-**After** (spring 블록 내에 추가):
+**Before**: Kafka 설정 없음  
+**After**: spring 블록 내에 추가
 ```yaml
 spring:
   kafka:
@@ -220,6 +209,7 @@ public class DeliveryEventHandler {
 ---
 
 ### 6. `dto/DeliveryDetailResponse.java`
+> 추후 DTO 구조 분리 (데이터 보호), Kafka 용 DTO 통합 구조를 적용할 필요성이 있음.
 
 **위치**: `delivery-service/src/main/java/com/sparta/logistics/delivery/dto/DeliveryDetailResponse.java`
 
@@ -288,7 +278,7 @@ public interface UserServiceClient {
 ```java
 @FeignClient(name = "user-service")
 public interface UserServiceClient {
-    // user-service 팀과 엔드포인트 확정 필요 — 현재 가정 경로
+    // 엔드포인트 재확인 요망
     @GetMapping("/api/v1/users/{userId}")
     ApiResponse<UserResponse> getUser(@PathVariable UUID userId);
 }
@@ -298,10 +288,10 @@ public interface UserServiceClient {
 
 ## 신규 생성 파일
 
-### `dto/event/StockReservedEventDto.java`
+### [수정중] `dto/event/StockReservedEventDto.java`
 ```java
 // stock.reserved 이벤트 수신용 DTO
-// hub-service 팀 구현과 필드명 동기화 필요
+// #158 kafka 전용 공통 DTO 참고하여 수정 필요
 public record StockReservedEventDto(
     UUID orderId,
     UUID receiverId,
@@ -311,7 +301,7 @@ public record StockReservedEventDto(
 ) {}
 ```
 
-### `dto/event/DeliveryCreationFailedEvent.java`
+### [수정중] `dto/event/DeliveryCreationFailedEvent.java`
 ```java
 // delivery.creation.failed 이벤트 발행용 DTO
 public record DeliveryCreationFailedEvent(
@@ -320,7 +310,7 @@ public record DeliveryCreationFailedEvent(
 ) {}
 ```
 
-### `dto/event/AiDeadlineCalculatedEvent.java`
+### [수정중] `dto/event/AiDeadlineCalculatedEvent.java`
 ```java
 // ai.deadline.calculated 이벤트 수신용 DTO
 public record AiDeadlineCalculatedEvent(
@@ -332,6 +322,7 @@ public record AiDeadlineCalculatedEvent(
 ### `infrastructure/event/DeliveryEventPublisher.java`
 ```java
 // delivery.creation.failed 이벤트 발행 담당
+// 로직 보강 중...
 @Component
 @RequiredArgsConstructor
 public class DeliveryEventPublisher {
@@ -352,9 +343,9 @@ public class DeliveryEventPublisher {
 }
 ```
 
-### `client/response/UserResponse.java`
+### [수정중] `client/response/UserResponse.java`
 ```java
-// user-service 응답 DTO — 팀 협의 후 실제 필드 구조에 맞게 수정 필요
+// user-service 응답 DTO — 재점검 요망
 public record UserResponse(
     UUID userId,
     String slackId
@@ -371,3 +362,15 @@ public record UserResponse(
 | `DeliveryRepository.java` | 기존 save() 메서드 그대로 사용 |
 | `DeliverySearchCond.java` | 조회 기능이므로 생성 로직과 무관 |
 | `DeliveryListResponse.java` | 변경 없음 |
+
+---
+
+## 차후 수정 방향
+- SA 문서에 맞게 폴더 구조 수정 필요 (delivery deliveryRoute deliveryManager로 구분)
+- 배송 생성 시 알람 기능 필요한지 확인 및 구현
+- `UserResponse` DTO 구조 재점검
+- `DeliveryCreationFailedEvent` 이벤트 발행 로직 재점검
+- `AI 최종 발송 시한` DTO 재점검
+- `StockReservedEventDto` 재점검
+- `DeliveryDetailResponse` DTO 구조 분리 검토
+- Kafka용 통합 DTO 반영

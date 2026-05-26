@@ -1,8 +1,11 @@
-# Delivery Service — 권한 설계 가이드
+# Delivery Service — 권한 가이드
 
 ---
 
 ## 1. 역할(Role) 정의
+> `허브 배송 담당자`와 `업체 배송 담당자` 분기를  
+> 현재는 역할(Role)이 아닌 배송 서비스 내 로직(Service)으로 하고 있음.  
+> 하지만 추후 정산 등 다른 API가 필요할 시 역할 혹은 공통 분기점을 정비할 필요가 있어 보임.
 
 | 역할 | 설명 | 추가 헤더 |
 |------|------|---------|
@@ -25,7 +28,7 @@
 | 배송 상태 변경 | ✅ | ✅ 자기 허브 소속 | ✅ 자신 담당 배송² | ❌ |
 | 배송 삭제 | ✅ | ❌ | ❌ | ❌ |
 
-> ¹ COMPANY_MANAGER의 배송 소유 검증(companyId → orderId)은 order-service 연동 후 구현 예정.  
+> ¹ COMPANY_MANAGER의 배송 소유 검증(companyId → orderId)은 협의 후 구현 예정.  
 > 현재는 COMPANY_MANAGER에게 모든 배송 조회를 허용 (임시 정책).
 >
 > ² DELIVERY_MANAGER의 배송 접근은 **담당자 타입에 따라 범위가 다릅니다** — 아래 [섹션 5. DELIVERY_MANAGER 타입별 접근 범위](#5-delivery_manager-타입별-접근-범위) 참고.

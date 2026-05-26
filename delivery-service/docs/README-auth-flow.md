@@ -18,7 +18,7 @@ API Gateway (:8080)
   │  JWT 재검증 없음 — Gateway 신뢰 모델
   ▼
 서비스 내 권한 검사
-  └── DeliveryPermissionChecker (delivery-service)
+  └── EX) DeliveryPermissionChecker (delivery-service)
   └── 각 서비스 자체 권한 로직
 ```
 
@@ -134,9 +134,8 @@ POST /api/v1/auth/login    # 로그인 (JWT 발급)
 
 ## 7. 보안 고려사항
 
-| 항목 | 현재 상태 | 개선 방향 |
-|------|---------|---------|
-| JWT 서명 알고리즘 | HS256 | 운영 환경 RSA(RS256) 전환 권장 |
-| Refresh Token 저장 | Redis | 현재 구현 완료 |
-| 서비스 간 내부 호출 인증 | 없음 (Gateway 신뢰 모델) | 운영 환경 mTLS 또는 내부 API Key 추가 권장 |
-| COMPANY_MANAGER 배송 소유 검증 | order-service 연동 미구현 | order-service와 협의 후 companyId → orderId 검증 추가 예정 |
+| 항목 | 현재 상태 | 개선 방향                                            |
+|------|---------|--------------------------------------------------|
+| JWT 서명 알고리즘 | HS256 | 운영 환경 RSA(RS256) 전환 필요                           |
+| Refresh Token 저장 | Redis | 현재 구현 완료                                         |
+| 서비스 간 내부 호출 인증 | 없음 (Gateway 신뢰 모델) | 운영 환경 mTLS 또는 내부 API Key 추가 고려할지 협의 필요           |

@@ -1,4 +1,4 @@
-# Delivery Service — 외�� 서비스 Feign 계약
+# Delivery Service — 외부 서비스 Feign 계약
 
 delivery-service가 의존하는 외부 서비스와의 인터페이스 계약을 정리합니다.
 
@@ -53,11 +53,11 @@ DeliveryEventHandler.handleStockReserved()
 
 ### 팀 협의 사항
 
-| 항목 | 상태 | 내용 |
-|------|------|------|
-| 엔드포인트 경로 | 🟡 협의 필요 | `GET /api/v1/users/{userId}` — user-service 팀 확인 필요 |
-| 응답 구조 | 🟡 협의 필요 | `data.slackId` 필드 존재 여부 확인 필요 |
-| Feign timeout | 🟡 미설정 | 기본값 사용 중 — 운영 전 timeout 설정 권장 |
+| 항목 | 상태          | 내용                                 |
+|------|-------------|------------------------------------|
+| 엔드포인트 경로 | 🔵 문서 확인 필요 | `GET /api/v1/users/{userId}` 인지 체크 |
+| 응답 구조 | 🔵 문서 확인 필요 | `data.slackId` 필드 존재 여부 확인 필요      |
+| Feign timeout | 🟡 미설정      | 기본값 사용 중 — 운영 전 timeout 설정 권장      |
 
 ---
 
@@ -118,14 +118,14 @@ if (req.managerType() == DeliveryManagerType.COMPANY_DELIVERY) {
 
 ### 팀 협의 사항
 
-| 항목 | 상태 | 내용 |
-|------|------|------|
-| 엔드포인트 경로 | 🟡 협의 필요 | `GET /api/v1/hubs/{hubId}/exists` — hub-service 팀 확인 필요 |
-| 응답 구조 | 🟡 협의 필요 | 존재하면 200, 없으면 404 반환 여부 확인 |
+| 항목 | 상태           | 내용    |
+|------|--------------|-------|
+| 엔드포인트 경로 | 🔵 문서 확인 필요  | `GET /api/v1/hubs/{hubId}/exists` 인지 체크 |
+| 응답 구조 | 🔵 문서 확인 필요  | 존재하면 200, 없으면 404 반환 여부 확인              |
 
 ---
 
-## 3. Kafka 이벤트 계약 (발행/소비)
+## 3. Kafka 이벤트 계약 (발행/구독)
 
 ### 소비 토픽
 
@@ -141,13 +141,15 @@ if (req.managerType() == DeliveryManagerType.COMPANY_DELIVERY) {
 {
   "orderId": "UUID",
   "receiverId": "UUID",
-  "sourceHubId": "UUID",
+  "sourceHubId": "UUID", // 이미 기준으로 묶어서 보냄
   "destinationHubId": "UUID",
   "deliveryAddress": "String"
 }
 ```
 
-> 협의 사항: hub-service 팀이 위 5개 필드를 `stock.reserved` 페이로드에 포함해야 함.
+> 해당 5개 필드를 `stock.reserved` 페이로드에 포함.  
+> 주문 1: 상품 N : 배송허브 1~N 구조로,  
+> 한 주문에서 여러 상품이 있을 경우, 배송 허브를 기준으로 하나씩 발행
 
 #### `ai.deadline.calculated`
 
@@ -181,7 +183,7 @@ if (req.managerType() == DeliveryManagerType.COMPANY_DELIVERY) {
 }
 ```
 
-> 협의 사항: hub-service, order-service 팀이 이 토픽을 구독하고 보상 로직(재고 복구, 주문 취소) 구현 필요.
+> 고민 사항: 1개의 허브에서라도 배송 생성 실패가 된다면, 전체 실패로 간주할지 말지 협의 필요 
 
 ---
 
@@ -198,12 +200,10 @@ delivery-service
 
 ---
 
-## 5. 미결 협의 사항
+## 5. 미확인 사항
 
-| ��목 | 협의 대상 | 내용 | 우선순위 |
-|------|---------|------|---------|
-| `stock.reserved` 페이로드 필드 | hub-service | 5개 필드 포함 여부 | 🔴 필수 |
-| `GET /api/v1/users/{userId}` 응답 | user-service | `slackId` 필드 포함 여부 | 🔴 필수 |
-| `delivery.creation.failed` ��독 | hub-service, order-service | 보상 Saga 구현 | 🟡 중요 |
-| `GET /api/v1/hubs/{hubId}/exists` 응답 | hub-service | 200/404 응답 구조 및 경로 최종 확정 | 🟡 중요 |
-| COMPANY_MANAGER 배송 소유 검증 | order-service | companyId → orderId 검증 API | 🟢 추후 |
+| 항목                                             | 협의 대상 | 내용 | 우선순위  |
+|------------------------------------------------|---------|------|-------|
+| `GET /api/v1/users/{userId}` 응답                | user-service | `slackId` 필드 포함 여부 | 🔴 필수 |
+| 1개의 허브에서라도 배송 생성 실패가 된다면, 전체 실패로 간주할지 말지 협의 필요 | delivery-service | `delivery.creation.failed` 로직 구현 필요 | 🔴 필수 |  
+| COMPANY_MANAGER 배송 소유 검증                       | order-service | companyId → orderId 검증 API | 🟢 추후 |

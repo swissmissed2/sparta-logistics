@@ -83,6 +83,7 @@ manager.delete(actorId); // softDelete + status → WITHDRAWN
 ## 6. `deliveryManagerId` → `companyDeliveryManagerId` 필드명 변경
 
 **변경 이유**
+(SA문서에 따름)
 
 테이블 스펙에는 두 종류의 배송 담당자가 존재:
 - 허브 배송 담당자(HUB_DELIVERY): 구간별 담당 → `p_delivery_route.hub_delivery_manager_id`에 저장
@@ -141,6 +142,8 @@ private long version;
 ---
 
 ### 7-2. Fix: `GlobalExceptionHandler`에 409 핸들러 추가
+> `DeliveryExceptionHandler` 로 임시 이동  
+> 차후 협의 후 Common에 추가 고려
 
 ```java
 // common/.../GlobalExceptionHandler.java
