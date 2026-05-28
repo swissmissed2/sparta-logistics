@@ -7,14 +7,15 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-/** DeliveryStartedEvent 내 배송 출고 대상 상품 항목 페이로드 */
+/**
+ * DeliveryStartedEvent 내 배송 출고 대상 상품 항목 페이로드
+ * orderItemId 제거: DeliveryOrderItemEntity에 orderItemId가 없어 null 발행되던 문제 해소
+ */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class DeliveryOrderItemPayload {
-    // 주문 항목 ID (HubService 재고 변경 이력 기록용)
-    private UUID orderItemId;
     private UUID productId;
     private UUID hubId;
     private Integer quantity;
