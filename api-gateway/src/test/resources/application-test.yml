@@ -1,0 +1,42 @@
+spring:
+  config:
+    import: ""                      # Config Server 연결 비활성화
+  cloud:
+    config:
+      enabled: false
+    gateway:
+      server:
+        webflux:
+          routes:
+            # internal 경로 차단 (운영과 동일)
+            - id: product-internal-block
+              uri: no://op
+              predicates:
+                - Path=/api/v1/products/internal/**
+              filters:
+                - SetStatus=404
+
+            # user-service → WireMock (lb:// 대신 직접 URL)
+            - id: user-service
+              uri: ${downstream.url:http://localhost:8099}
+              predicates:
+                - Path=/api/v1/auth/**, /api/v1/users/**
+
+eureka:
+  client:
+    enabled: false
+
+management:
+  tracing:
+    enabled: false
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans  # 비활성화 상태라 실제 연결 안 함
+
+jwt:
+  secret-key: aGVsbG9Xb3JsZFNlY3JldEtleUZvckpXVEF1dGgxMjM0NTY=
+
+logging:
+  level:
+    root: WARN
+    com.sparta.logistics.gateway: DEBUG

@@ -32,5 +32,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	// WebFlux(Reactor) 테스트용 (게이트웨이는 WebFlux 기반)
 	testImplementation 'io.projectreactor:reactor-test'
+	// 통합 테스트: 하위 서비스 Mock 서버
+	testImplementation 'org.wiremock:wiremock-standalone:3.9.1'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
