@@ -2,23 +2,30 @@ package com.sparta.logistics.delivery.service;
 
 import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.exception.BusinessException;
+import com.sparta.logistics.common.kafka.event.DeliveryCreatedItemPayload;
+import com.sparta.logistics.delivery.client.response.HubBatchResponse;
 import com.sparta.logistics.delivery.client.response.HubRouteSegmentResponse;
+import com.sparta.logistics.delivery.client.response.ProductBatchResponse;
 import com.sparta.logistics.delivery.dto.DeliveryDetailResponse;
 import com.sparta.logistics.delivery.dto.DeliveryListResponse;
 import com.sparta.logistics.delivery.dto.DeliverySearchCond;
 import com.sparta.logistics.delivery.dto.DeliveryStatusChangeRequest;
 import com.sparta.logistics.delivery.dto.DeliveryUpdateRequest;
 import com.sparta.logistics.delivery.dto.event.StockReservedEventDto;
+import com.sparta.logistics.delivery.dto.event.StockReservedItemPayload;
 import com.sparta.logistics.delivery.entity.DeliveryEntity;
 import com.sparta.logistics.delivery.entity.DeliveryLogEntity;
+import com.sparta.logistics.delivery.entity.DeliveryManagerEntity;
 import com.sparta.logistics.delivery.entity.DeliveryOrderItemEntity;
 import com.sparta.logistics.delivery.entity.DeliveryRouteEntity;
 import com.sparta.logistics.delivery.entity.DeliveryStatus;
 import com.sparta.logistics.delivery.entity.enums.DeliveryEventType;
 import com.sparta.logistics.delivery.entity.enums.RouteType;
 import com.sparta.logistics.delivery.exception.DeliveryErrorCode;
+import com.sparta.logistics.delivery.infrastructure.client.FeignCallService;
 import com.sparta.logistics.delivery.infrastructure.event.DeliveryEventPublisher;
 import com.sparta.logistics.delivery.repository.DeliveryLogRepository;
+import com.sparta.logistics.delivery.repository.DeliveryManagerRepository;
 import com.sparta.logistics.delivery.repository.DeliveryOrderItemRepository;
 import com.sparta.logistics.delivery.repository.DeliveryRepository;
 import com.sparta.logistics.delivery.repository.DeliveryRouteRepository;
@@ -33,7 +40,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,9 +53,11 @@ public class DeliveryService {
     private final DeliveryRouteRepository deliveryRouteRepository;
     private final DeliveryOrderItemRepository deliveryOrderItemRepository;
     private final DeliveryLogRepository deliveryLogRepository;
+    private final DeliveryManagerRepository deliveryManagerRepository;
     private final DeliveryPermissionChecker permissionChecker;
     private final DeliveryEventPublisher eventPublisher;
     private final DeliveryAssignmentService assignmentService;
+    private final FeignCallService feignCallService;
 
     // 배송 단건 조회
     @Transactional(readOnly = true)
@@ -163,17 +174,61 @@ public class DeliveryService {
         // 배차 — 담당자 없으면 null 허용 후 계속 진행
         assignmentService.assignManagersForSystem(entity.getId());
 
-        // 트랜잭션 커밋 후 발행이 이상적이나 우선적으로 단순 구조 채택
-        // 추후 outbox 패턴으로 전환 가능하다면 이 호출 제거
-        eventPublisher.publishCreated(
-                entity.getId(),
-                event.orderId(),
-                entity.getSourceHubId(),
-                entity.getDestinationHubId(),
-                entity.getCompanyDeliveryManagerId(),
-                event.totalDeliveryCount() != null ? event.totalDeliveryCount() : 0,
-                entity.getDeliveryAddress()
-        );
+        // companyDeliveryManagerSlackId: Feign 불필요, DB 직접 조회
+        final String managerSlackId = entity.getCompanyDeliveryManagerId() != null
+                ? deliveryManagerRepository.findById(entity.getCompanyDeliveryManagerId())
+                        .map(DeliveryManagerEntity::getSlackId)
+                        .orElse(null)
+                : null;
+
+        // afterCommit 람다 캡처용 로컬 변수
+        final UUID capturedDeliveryId = entity.getId();
+        final UUID capturedOrderId = event.orderId();
+        final UUID capturedSrcHubId = entity.getSourceHubId();
+        final UUID capturedDstHubId = entity.getDestinationHubId();
+        final UUID capturedManagerId = entity.getCompanyDeliveryManagerId();
+        final Integer capturedTotalCount = event.totalDeliveryCount() != null ? event.totalDeliveryCount() : 0;
+        final String capturedAddress = entity.getDeliveryAddress();
+        final String capturedReceiverSlackId = entity.getReceiverSlackId();
+        final List<StockReservedItemPayload> capturedItems = event.orderItems();
+
+        // 트랜잭션 커밋 후 발행 — DB 연결 보유 중 Feign 블로킹 방지
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    List<HubBatchResponse> hubList =
+                            feignCallService.fetchHubNames(List.of(capturedSrcHubId, capturedDstHubId));
+                    Map<UUID, String> hubNameMap = hubList.stream()
+                            .collect(Collectors.toMap(HubBatchResponse::hubId, HubBatchResponse::name));
+
+                    List<UUID> productIds = capturedItems.stream()
+                            .map(StockReservedItemPayload::productId).toList();
+                    List<ProductBatchResponse> productList = feignCallService.fetchProductNames(productIds);
+                    Map<UUID, String> productNameMap = productList.stream()
+                            .collect(Collectors.toMap(ProductBatchResponse::productId, ProductBatchResponse::name));
+
+                    List<DeliveryCreatedItemPayload> itemPayloads = capturedItems.stream()
+                            .map(i -> DeliveryCreatedItemPayload.builder()
+                                    .productName(productNameMap.get(i.productId()))
+                                    .quantity(i.reservedQuantity())
+                                    .build())
+                            .toList();
+
+                    eventPublisher.publishCreated(
+                            capturedDeliveryId, capturedOrderId,
+                            capturedSrcHubId, capturedDstHubId,
+                            hubNameMap.get(capturedSrcHubId), hubNameMap.get(capturedDstHubId),
+                            capturedManagerId, managerSlackId,
+                            capturedTotalCount, capturedAddress,
+                            capturedReceiverSlackId, itemPayloads
+                    );
+                } catch (Exception e) {
+                    log.error("[Kafka][수동처리 필요] delivery.created 발행 실패(afterCommit) — deliveryId={}",
+                            capturedDeliveryId, e);
+                }
+            }
+        });
     }
 
     // ai.deadline.calculated 이벤트 수신 시 호출 — deadline 저장 후 delivery.started 발행

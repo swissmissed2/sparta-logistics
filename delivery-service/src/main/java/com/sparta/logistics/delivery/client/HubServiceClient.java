@@ -1,5 +1,6 @@
 package com.sparta.logistics.delivery.client;
 
+import com.sparta.logistics.delivery.client.response.HubBatchResponse;
 import com.sparta.logistics.delivery.client.response.HubRouteSegmentResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,4 +23,7 @@ public interface HubServiceClient {
             @RequestParam("sourceHubId") UUID sourceHubId,
             @RequestParam("destinationHubId") UUID destinationHubId
     );
+
+    @GetMapping("/api/v1/hubs/batch")
+    List<HubBatchResponse> getHubsByIds(@RequestParam("ids") List<UUID> ids);
 }

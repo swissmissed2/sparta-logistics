@@ -6,6 +6,7 @@ import com.sparta.logistics.common.kafka.KafkaTopics;
 import com.sparta.logistics.common.kafka.event.DeliveryCancellationFailedEvent;
 import com.sparta.logistics.common.kafka.event.DeliveryCancelledAckEvent;
 import com.sparta.logistics.common.kafka.event.DeliveryCreatedEvent;
+import com.sparta.logistics.common.kafka.event.DeliveryCreatedItemPayload;
 import com.sparta.logistics.common.kafka.event.DeliveryCreationFailedEvent;
 import com.sparta.logistics.common.kafka.event.DeliveryOrderItemPayload;
 import com.sparta.logistics.common.kafka.event.DeliveryStartedEvent;
@@ -29,8 +30,10 @@ public class DeliveryEventPublisher {
 
     public void publishCreated(UUID deliveryId, UUID orderId,
                                UUID sourceHubId, UUID destinationHubId,
-                               UUID companyDeliveryManagerId, int totalDeliveryCount,
-                               String deliveryAddress) {
+                               String sourceHubName, String destinationHubName,
+                               UUID companyDeliveryManagerId, String companyDeliveryManagerSlackId,
+                               Integer totalDeliveryCount, String deliveryAddress,
+                               String receiverSlackId, List<DeliveryCreatedItemPayload> orderItems) {
         try {
             String message = objectMapper.writeValueAsString(
                     DeliveryCreatedEvent.builder()
@@ -39,16 +42,21 @@ public class DeliveryEventPublisher {
                             .orderId(orderId)
                             .sourceHubId(sourceHubId)
                             .destinationHubId(destinationHubId)
+                            .sourceHubName(sourceHubName)
+                            .destinationHubName(destinationHubName)
                             .companyDeliveryManagerId(companyDeliveryManagerId)
+                            .companyDeliveryManagerSlackId(companyDeliveryManagerSlackId)
                             .totalDeliveryCount(totalDeliveryCount)
                             .deliveryAddress(deliveryAddress)
+                            .receiverSlackId(receiverSlackId)
+                            .orderItems(orderItems)
                             .build()
             );
             kafkaTemplate.send(KafkaTopics.DELIVERY_CREATED, deliveryId.toString(), message);
             log.info("[Kafka] delivery.created 발행 — deliveryId={}, orderId={}", deliveryId, orderId);
         } catch (JsonProcessingException e) {
             log.error("[Kafka] delivery.created 직렬화 실패 — deliveryId={}", deliveryId, e);
-            throw new RuntimeException(e);  // 삼키면 order-service 미인지 — 트랜잭션 롤백 후 재처리
+            throw new RuntimeException(e);
         }
     }
 

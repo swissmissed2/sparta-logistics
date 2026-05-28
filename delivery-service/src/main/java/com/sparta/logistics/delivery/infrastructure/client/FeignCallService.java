@@ -3,8 +3,11 @@ package com.sparta.logistics.delivery.infrastructure.client;
 import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.common.response.ApiResponse;
 import com.sparta.logistics.delivery.client.HubServiceClient;
+import com.sparta.logistics.delivery.client.ProductServiceClient;
 import com.sparta.logistics.delivery.client.UserServiceClient;
+import com.sparta.logistics.delivery.client.response.HubBatchResponse;
 import com.sparta.logistics.delivery.client.response.HubRouteSegmentResponse;
+import com.sparta.logistics.delivery.client.response.ProductBatchResponse;
 import com.sparta.logistics.delivery.client.response.UserResponse;
 import com.sparta.logistics.delivery.exception.DeliveryErrorCode;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -32,6 +35,7 @@ public class FeignCallService {
 
     private final UserServiceClient userServiceClient;
     private final HubServiceClient hubServiceClient;
+    private final ProductServiceClient productServiceClient;
 
     @Retry(name = "feign-call", fallbackMethod = "recoverFetchUser")
     public ApiResponse<UserResponse> fetchUser(UUID receiverId) {
@@ -53,5 +57,25 @@ public class FeignCallService {
         log.warn("[Feign] hub-service 재시도 초과 — sourceHubId={}, destinationHubId={}",
                 sourceHubId, destinationHubId);
         throw new BusinessException(DeliveryErrorCode.HUB_SERVICE_UNAVAILABLE);
+    }
+
+    @Retry(name = "feign-call", fallbackMethod = "recoverFetchHubNames")
+    public List<HubBatchResponse> fetchHubNames(List<UUID> hubIds) {
+        return hubServiceClient.getHubsByIds(hubIds);
+    }
+
+    public List<HubBatchResponse> recoverFetchHubNames(List<UUID> hubIds, Exception e) {
+        log.warn("[Feign] hub-service batch 재시도 초과 — ids={}", hubIds);
+        return List.of();
+    }
+
+    @Retry(name = "feign-call", fallbackMethod = "recoverFetchProductNames")
+    public List<ProductBatchResponse> fetchProductNames(List<UUID> productIds) {
+        return productServiceClient.getProductsByIds(productIds);
+    }
+
+    public List<ProductBatchResponse> recoverFetchProductNames(List<UUID> productIds, Exception e) {
+        log.warn("[Feign] product-service batch 재시도 초과 — ids={}", productIds);
+        return List.of();
     }
 }
