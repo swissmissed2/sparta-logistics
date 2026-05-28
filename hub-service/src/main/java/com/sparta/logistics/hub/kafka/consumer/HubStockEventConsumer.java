@@ -34,7 +34,8 @@ public class HubStockEventConsumer {
 
             hubStockService.restoreStock(command);
         } catch (JsonProcessingException e) {
-            log.error("[Kafka] restore.stock.command 역직렬화 실패 - message: {}", message, e);
+            // 역직렬화 실패 — 재시도 의미 없으므로 의도적 스킵
+            log.error("[Kafka] restore.stock.command 역직렬화 실패 - 스킵 처리: {}", message, e);
         }
     }
 
@@ -52,6 +53,7 @@ public class HubStockEventConsumer {
 
             hubStockService.restoreOnDeliveryFailed(event);
         } catch (JsonProcessingException e) {
+            // 역직렬화 실패 — 재시도 의미 없으므로 의도적 스킵
             log.error("[Kafka] delivery.creation.failed 역직렬화 실패 - message: {}", message, e);
         }
     }
@@ -69,6 +71,7 @@ public class HubStockEventConsumer {
 
             hubStockService.reserveStock(event);
         } catch (JsonProcessingException e) {
+            // 역직렬화 실패 — 재시도 의미 없으므로 의도적 스킵
             log.error("[Kafka] order.created 역직렬화 실패 - message: {}", message, e);
         }
     }
@@ -87,6 +90,7 @@ public class HubStockEventConsumer {
 
             hubStockService.deductReservedStock(event);
         } catch (JsonProcessingException e) {
+            // 역직렬화 실패 — 재시도 의미 없으므로 의도적 스킵
             log.error("[Kafka] delivery.started 역직렬화 실패 - message: {}", message, e);
         }
     }

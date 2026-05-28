@@ -1,6 +1,7 @@
 package com.sparta.logistics.hub.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sparta.logistics.hub.kafka.exception.KafkaSkipException;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -33,7 +34,8 @@ public class KafkaConfig {
 
         // retry 의미 없는 예외 제외
         handler.addNotRetryableExceptions(
-                JsonProcessingException.class
+                JsonProcessingException.class,
+                KafkaSkipException.class
         );
 
         return handler;
@@ -96,6 +98,7 @@ public class KafkaConfig {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        factory.setCommonErrorHandler(kafkaErrorHandler());
 
         return factory;
     }

@@ -15,12 +15,14 @@ import com.sparta.logistics.hub.hubstock.dto.response.HubStockCreateResponse;
 import com.sparta.logistics.hub.hubstock.dto.response.HubStockListResponse;
 import com.sparta.logistics.hub.hubstock.entity.HubStock;
 import com.sparta.logistics.hub.hubstock.enums.HubStockChangeType;
+import com.sparta.logistics.hub.kafka.exception.KafkaSkipException;
 import com.sparta.logistics.hub.kafka.publisher.HubStockEventPublisher;
 import com.sparta.logistics.hub.hubstock.service.helper.HubStockLockHelper;
 import com.sparta.logistics.hub.hubstock.repository.HubStockRepository;
 import com.sparta.logistics.hub.hubstocklog.entity.HubStockLog;
 import com.sparta.logistics.hub.hubstocklog.repository.HubStockLogRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HubStockService {
@@ -129,7 +132,14 @@ public class HubStockService {
 
             HubStock hubStock = hubStockRepository
                     .findByHubIdAndProductId(item.getHubId(), item.getProductId())
-                    .orElseThrow(() -> new BusinessException(HubStockErrorCode.HUB_STOCK_NOT_FOUND));
+                    .orElseGet(() -> {
+                        registerStockRestorationFailedEvent(
+                                command.getEventId(),
+                                command.getOrderId(),
+                                "허브 재고 없음"
+                        );
+                        throw new KafkaSkipException("허브 재고 없음 - orderId: " + command.getOrderId());
+                    });
 
             int beforeQuantity = hubStock.getAvailable();
             hubStock.restore(item.getQuantity());
@@ -160,7 +170,11 @@ public class HubStockService {
 
             HubStock hubStock = hubStockRepository
                     .findByHubIdAndProductId(item.getHubId(), item.getProductId())
-                    .orElseThrow(() -> new BusinessException(HubStockErrorCode.HUB_STOCK_NOT_FOUND));
+                    .orElseGet(() -> {
+                        log.error("[HubStock] 재고 복구 실패 - 허브 재고 없음. orderId: {}, productId: {}",
+                                event.getOrderId(), item.getProductId());
+                        throw new KafkaSkipException("허브 재고 없음 - orderId: " + event.getOrderId());
+                    });
 
             int beforeQuantity = hubStock.getAvailable();
             hubStock.restore(item.getQuantity());
@@ -195,17 +209,24 @@ public class HubStockService {
 
             HubStock hubStock = hubStockRepository
                     .findByHubIdAndProductId(item.getHubId(), item.getProductId())
-                    .orElseThrow(() -> new BusinessException(HubStockErrorCode.HUB_STOCK_NOT_FOUND));
+                    .orElseGet(() -> {
+                        registerStockReservationFailedEvent(
+                                event.getEventId(),
+                                event.getOrderId(),
+                                item.getProductId(),
+                                "허브 재고 없음"
+                        );
+                        throw new KafkaSkipException("허브 재고 없음 - orderId: " + event.getOrderId());
+                    });
 
             // 재고 부족 시 실패 이벤트 발행하고 종료
             if (hubStock.getAvailable() < item.getQuantity()) {
-                hubStockEventPublisher.publishStockReservationFailed(
+                registerStockReservationFailedEvent(
                         event.getEventId(),
                         event.getOrderId(),
                         item.getProductId(),
-                        "재고 부족"
-                );
-                throw new BusinessException(HubStockErrorCode.HUB_STOCK_INSUFFICIENT);
+                        "재고 부족");
+                throw new KafkaSkipException("재고 부족 - orderId: " + event.getOrderId());
             }
 
             int beforeQuantity = hubStock.getAvailable();
@@ -251,7 +272,11 @@ public class HubStockService {
 
             HubStock hubStock = hubStockRepository
                     .findByHubIdAndProductId(item.getHubId(), item.getProductId())
-                    .orElseThrow(() -> new BusinessException(HubStockErrorCode.HUB_STOCK_NOT_FOUND));
+                    .orElseGet(() -> {
+                        log.error("[HubStock] 예약 재고 차감 실패 - 허브 재고 없음. orderId: {}, productId: {}",
+                                event.getOrderId(), item.getProductId());
+                        throw new KafkaSkipException("허브 재고 없음 - orderId: " + event.getOrderId());
+                    });
 
             int beforeReserved = hubStock.getReserved();
             hubStock.decreaseReserved(item.getQuantity());
@@ -267,6 +292,20 @@ public class HubStockService {
                     HubStockChangeType.ORDER_DECREASE
             ));
         }
+    }
+
+    // 재고 복구 실패 시 발행
+    private void registerStockRestorationFailedEvent(UUID eventId, UUID orderId, String reason) {
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    // KafkaSkipException 발생 시 트랜잭션 롤백 → afterCommit() 미실행
+                    // 롤백 후에도 실패 이벤트 발행이 필요하므로 afterCompletion 사용
+                    @Override
+                    public void afterCompletion(int status) {
+                        hubStockEventPublisher.publishStockRestorationFailed(eventId, orderId, reason);
+                    }
+                }
+        );
     }
 
     // 재고 변경 후 Order Service 스냅샷 갱신을 위한 이벤트 등록 (커밋 후 발행)
@@ -304,6 +343,19 @@ public class HubStockService {
                     @Override
                     public void afterCommit() {
                         hubStockEventPublisher.publishStockReserved(event);
+                    }
+                }
+        );
+    }
+
+    private void registerStockReservationFailedEvent(UUID eventId, UUID orderId, UUID productId, String reason) {
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        hubStockEventPublisher.publishStockReservationFailed(
+                                eventId, orderId, productId, reason
+                        );
                     }
                 }
         );
