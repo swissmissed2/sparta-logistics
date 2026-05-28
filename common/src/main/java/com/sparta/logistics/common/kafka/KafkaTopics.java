@@ -28,6 +28,4 @@ public final class KafkaTopics {
     public static final String DELIVERY_CANCELLATION_FAILED = "delivery.cancellation.failed";
     public static final String STOCK_RESTORATION_FAILED     = "stock.restoration.failed";
 
-    // 허브 이벤트
-    public static final String HUB_DELETED = "hub.deleted";
 }

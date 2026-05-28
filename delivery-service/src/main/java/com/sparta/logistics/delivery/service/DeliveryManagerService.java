@@ -14,7 +14,6 @@ import com.sparta.logistics.delivery.entity.enums.DeliveryManagerType;
 import com.sparta.logistics.delivery.exception.DeliveryErrorCode;
 import com.sparta.logistics.delivery.repository.DeliveryManagerRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeliveryManagerService {
@@ -119,14 +117,6 @@ public class DeliveryManagerService {
             throw new BusinessException(DeliveryErrorCode.MANAGER_IN_DELIVERY);
         }
         entity.delete(actorId);
-    }
-
-    // hub.deleted 이벤트 수신 시 해당 허브 소속 담당자 전체 소프트딜리트
-    @Transactional
-    public void deleteAllByHubId(UUID hubId, UUID deletedBy) {
-        List<DeliveryManagerEntity> managers = managerRepository.findAllByHubIdAndDeletedAtIsNull(hubId);
-        managers.forEach(m -> m.delete(deletedBy));
-        log.info("[hub.deleted] 배송 담당자 {}명 소프트딜리트 — hubId={}", managers.size(), hubId);
     }
 
     private DeliveryManagerEntity findActiveOrThrow(UUID managerId) {

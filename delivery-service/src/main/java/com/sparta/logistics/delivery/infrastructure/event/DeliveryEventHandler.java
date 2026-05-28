@@ -6,7 +6,6 @@ import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.common.kafka.KafkaTopics;
 import com.sparta.logistics.common.kafka.event.AiDeadlineCalculatedEvent;
 import com.sparta.logistics.common.kafka.event.CancelDeliveryCommand;
-import com.sparta.logistics.common.kafka.event.HubDeletedEvent;
 import com.sparta.logistics.common.kafka.event.RestoreStockItemPayload;
 import com.sparta.logistics.common.response.ApiResponse;
 import com.sparta.logistics.delivery.client.response.HubRouteSegmentResponse;
@@ -14,7 +13,6 @@ import com.sparta.logistics.delivery.client.response.UserResponse;
 import com.sparta.logistics.delivery.dto.event.StockReservedEventDto;
 import com.sparta.logistics.delivery.dto.event.StockReservedItemPayload;
 import com.sparta.logistics.delivery.infrastructure.client.FeignCallService;
-import com.sparta.logistics.delivery.service.DeliveryManagerService;
 import com.sparta.logistics.delivery.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +31,6 @@ import java.util.UUID;
 public class DeliveryEventHandler {
 
     private final DeliveryService deliveryService;
-    private final DeliveryManagerService deliveryManagerService;
     private final DeliveryEventPublisher eventPublisher;
     private final FeignCallService feignCallService;
     private final ObjectMapper objectMapper;
@@ -168,23 +165,6 @@ public class DeliveryEventHandler {
         } catch (Exception e) {
             // KafkaException 등 일시적 장애 — DefaultErrorHandler 재시도
             log.error("[Kafka] AI 발송 시한 업데이트 실패 — deliveryId={}", event.getDeliveryId(), e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    @KafkaListener(topics = KafkaTopics.HUB_DELETED, groupId = "delivery-service")
-    public void handleHubDeleted(String message) {
-        HubDeletedEvent event;
-        try {
-            event = objectMapper.readValue(message, HubDeletedEvent.class);
-        } catch (JsonProcessingException e) {
-            log.error("[Kafka] hub.deleted 역직렬화 실패: {}", message, e);
-            return;
-        }
-        try {
-            deliveryManagerService.deleteAllByHubId(event.getHubId(), event.getDeletedBy());
-        } catch (Exception e) {
-            log.error("[Kafka] hub.deleted 처리 실패 — hubId={}", event.getHubId(), e);
             throw new RuntimeException(e);
         }
     }
