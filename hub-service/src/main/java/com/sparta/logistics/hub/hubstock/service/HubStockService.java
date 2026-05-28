@@ -153,7 +153,7 @@ public class HubStockService {
             // 재고 변경 이력 기록(주문 취소 시에는 주문만 존재하고 배송은 존재하지 않음)
             hubStockLogRepository.save(HubStockLog.create(
                     hubStock,
-                    item.getOrderItemId(),
+                    null,
                     null,
                     item.getQuantity(),
                     beforeQuantity,
@@ -190,7 +190,7 @@ public class HubStockService {
             // 재고 변경 이력 추가
             hubStockLogRepository.save(HubStockLog.create(
                     hubStock,
-                    item.getOrderItemId(),
+                    null,
                     event.getDeliveryId(),   // 생성 실패 시 null 가능
                     item.getQuantity(),
                     beforeQuantity,
@@ -253,7 +253,7 @@ public class HubStockService {
             // 재고 변경 이력 기록
             hubStockLogRepository.save(HubStockLog.create(
                     hubStock,
-                    item.getOrderItemId(),
+                    null,
                     null,
                     item.getQuantity(),
                     beforeQuantity,
@@ -303,7 +303,7 @@ public class HubStockService {
 
             hubStockLogRepository.save(HubStockLog.create(
                     hubStock,
-                    item.getOrderItemId(),
+                    null,
                     event.getDeliveryId(),
                     -item.getQuantity(),
                     beforeReserved,

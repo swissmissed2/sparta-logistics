@@ -147,4 +147,27 @@ public class HubStockEventPublisher {
             log.error("[Kafka] stock.restoration.failed 발행 실패 - orderId: {}", orderId, e);
         }
     }
+
+    public void publishHubDeleted(UUID hubId, UUID deletedBy) {
+        try {
+            HubDeletedEvent event = HubDeletedEvent.builder()
+                    .eventId(UUID.randomUUID())
+                    .hubId(hubId)
+                    .deletedBy(deletedBy)
+                    .build();
+
+            String message = objectMapper.writeValueAsString(event);
+
+            kafkaTemplate.send(KafkaTopics.HUB_DELETED, hubId.toString(), message)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("[Kafka] hub.deleted 발행 실패 — hubId={}", hubId, ex);
+                        } else {
+                            log.info("[Kafka] hub.deleted 발행 성공 — hubId={}", hubId);
+                        }
+                    });
+        } catch (JsonProcessingException e) {
+            log.error("[Kafka] hub.deleted 발행 실패 — hubId={}", hubId, e);
+        }
+    }
 }
