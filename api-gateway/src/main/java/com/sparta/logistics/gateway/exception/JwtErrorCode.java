@@ -1,6 +1,6 @@
 package com.sparta.logistics.gateway.exception;
 
-import com.sparta.logistics.common.exception.ErrorCode;
+import com.sparta.logistics.gateway.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

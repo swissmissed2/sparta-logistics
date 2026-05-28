@@ -5,15 +5,13 @@ plugins {
 description = 'gateway-server'
 
 dependencies {
-	// 공통 모듈 참조
-	implementation(project(':common')) {
-	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-web'
-	exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webmvc'
-}
-
 	// Spring Cloud Gateway
 	implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	implementation 'org.springframework.cloud:spring-cloud-starter-config'
+
+	// Swagger (WebFlux용)
+	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.9'
 
 	// 보안 및 인증 (JWT)
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
@@ -26,6 +24,13 @@ dependencies {
 	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
 	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// 테스트
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	// WebFlux(Reactor) 테스트용 (게이트웨이는 WebFlux 기반)
 	testImplementation 'io.projectreactor:reactor-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

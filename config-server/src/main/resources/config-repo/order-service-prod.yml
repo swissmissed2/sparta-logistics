@@ -1,0 +1,39 @@
+server:
+  port: 19095
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}?currentSchema=schema_order
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: schema_order
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: order-service-group
+
+feign:
+  circuitbreaker:
+    enabled: true
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${server.port}
+
+# 배포 환경에서 warn 이하 레벨의 로그는 출력하지 않음
+logging:
+  level:
+    root: WARN

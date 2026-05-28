@@ -9,9 +9,9 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-public class FakeSlackSender {
+public class FakeSlackSender implements SlackSender {
 
-    public FakeSlackSendResult send(
+    public SlackSendResult send(
             UUID slackMessageId,
             String receiverSlackId,
             String message,
@@ -26,7 +26,7 @@ public class FakeSlackSender {
                 relatedId,
                 message);
 
-        return new FakeSlackSendResult(
+        return new SlackSendResult(
                 "fake-ts-" + slackMessageId,
                 "fake-channel"
         );

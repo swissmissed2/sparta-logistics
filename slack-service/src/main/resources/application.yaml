@@ -5,7 +5,20 @@ spring:
   application:
     name: slack-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import:
+      - optional:configserver:http://localhost:8888
+      - optional:classpath:application-secret.yaml
+  kafka:
+    bootstrap-servers: localhost:9092 # 도커 컴포즈 카프카 포트 [cite: 2433]
+    consumer:
+      group-id: slack-service-group
+      auto-offset-reset: earliest
+      # Key는 String, Value는 JSON 객체를 자바 DTO로 역직렬화하도록 설정
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*" # 모든 패키지의 DTO 허용 (보안 필요 시 패키지 제한)
+        # 데이터 변환 에러시 강제 매핑 spring.json.value.default.type: com.sparta.logistics.slack.infrastructure.DeliveryCreatedEvent
 
   datasource:
     url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:logistics}?currentSchema=schema_slack

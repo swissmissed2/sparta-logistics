@@ -71,7 +71,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
             @RequestHeader("X-Refresh-Token") String refreshToken){
 
-        Token token = authService.refresh(refreshToken);
+        Token token = authService.refresh(refreshToken.trim());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token.accessToken());

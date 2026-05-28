@@ -8,8 +8,8 @@ import com.sparta.logistics.slack.dto.response.SlackMessageResponse;
 import com.sparta.logistics.slack.entity.SlackMessage;
 import com.sparta.logistics.slack.exception.SlackErrorCode;
 import com.sparta.logistics.slack.repository.SlackMessageRepository;
-import com.sparta.logistics.slack.sender.FakeSlackSendResult;
-import com.sparta.logistics.slack.sender.FakeSlackSender;
+import com.sparta.logistics.slack.sender.SlackSendResult;
+import com.sparta.logistics.slack.sender.SlackSender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +24,7 @@ import java.util.UUID;
 public class SlackService {
 
     private final SlackMessageRepository slackMessageRepository;
-    private final FakeSlackSender fakeSlackSender;
+    private final SlackSender slackSender;
 
     @Transactional
     public SlackMessageResponse createSlackMessage(SlackMessageCreateRequest request, UUID senderId) {
@@ -39,7 +39,7 @@ public class SlackService {
 
         SlackMessage savedMessage = slackMessageRepository.save(slackMessage);
         try{
-            FakeSlackSendResult sendResult = fakeSlackSender.send(
+            SlackSendResult sendResult = slackSender.send(
                 savedMessage.getId(),
                 savedMessage.getReceiverSlackId(),
                 savedMessage.getMessage(),

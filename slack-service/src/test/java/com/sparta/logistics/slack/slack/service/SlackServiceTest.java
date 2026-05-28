@@ -9,7 +9,7 @@ import com.sparta.logistics.slack.enums.MessageType;
 import com.sparta.logistics.slack.enums.SlackMessageStatus;
 import com.sparta.logistics.slack.exception.SlackErrorCode;
 import com.sparta.logistics.slack.repository.SlackMessageRepository;
-import com.sparta.logistics.slack.sender.FakeSlackSendResult;
+import com.sparta.logistics.slack.sender.SlackSendResult;
 import com.sparta.logistics.slack.sender.FakeSlackSender;
 import com.sparta.logistics.slack.service.SlackService;
 import org.junit.jupiter.api.DisplayName;
@@ -83,7 +83,7 @@ public class SlackServiceTest {
 
     given(slackMessageRepository.save(any(SlackMessage.class))).willReturn(savedMessage);
 
-    FakeSlackSendResult fakeResult = new FakeSlackSendResult("fake-ts-" + messageId, "fake-channel");
+    SlackSendResult fakeResult = new SlackSendResult("fake-ts-" + messageId, "fake-channel");
 
     given(fakeSlackSender.send(any(), any(), any(), any(), any(), any())).willReturn(fakeResult);
 

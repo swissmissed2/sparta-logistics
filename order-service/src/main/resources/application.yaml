@@ -1,39 +1,11 @@
-server:
-  port: 19095
-
 spring:
   application:
     name: order-service
   config:
-    import: optional:configserver:http://localhost:8888
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}?currentSchema=schema_order
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        default_schema: schema_order
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: order-service-group
-
-feign:
-  circuitbreaker:
-    enabled: true
-
-eureka:
-  instance:
-    instance-id: ${spring.application.name}:${server.port}
+    import: "configserver:http://localhost:8888"
+  profiles:
+    active: local
+  cloud:
+    config:
+      discovery:
+        enabled: false
