@@ -42,7 +42,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
      * 기존: 상품 목록 조회 후 개별 update 처리 (N+1 문제)
      * 개선: companyId 기준 bulk update로 단일 쿼리 처리하여 DB 부하 감소
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
         UPDATE Product p
         SET p.deletedAt = :deletedAt, p.deletedBy = :deletedBy

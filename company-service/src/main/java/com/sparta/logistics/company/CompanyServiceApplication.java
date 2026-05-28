@@ -10,7 +10,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
         "com.sparta.logistics.company",
         "com.sparta.logistics.common"
 })
-@EnableFeignClients
+@EnableFeignClients(basePackages = {
+        "com.sparta.logistics.company.client.feign"
+})
 public class CompanyServiceApplication {
 
     public static void main(String[] args) {

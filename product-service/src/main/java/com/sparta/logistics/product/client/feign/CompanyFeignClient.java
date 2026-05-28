@@ -13,11 +13,14 @@ import java.util.UUID;
  * - 상품 생성 시 업체 존재 여부 검증
  * - 상품 생성 시 해당 업체가 실제로 해당 허브 소속인지 정합성 검증
  */
-@FeignClient(name = "company-service", fallback = CompanyFeignClientFallback.class)
+@FeignClient(
+        name = "company-service",
+        path = "/api/v1/companies",
+        fallback = CompanyFeignClientFallback.class)
 public interface CompanyFeignClient {
-    @GetMapping("/api/v1/companies/{companyId}/exists")
+    @GetMapping("/{companyId}/exists")
     void checkCompanyExists(@PathVariable("companyId")UUID companyId);
 
-    @GetMapping("/api/v1/companies/{companyId}")
+    @GetMapping("/{companyId}")
     ApiResponse<CompanyClientResponse> getCompany(@PathVariable UUID companyId);
 }
