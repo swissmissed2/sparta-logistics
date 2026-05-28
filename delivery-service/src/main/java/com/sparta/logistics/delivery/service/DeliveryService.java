@@ -177,7 +177,6 @@ public class DeliveryService {
     }
 
     // ai.deadline.calculated 이벤트 수신 시 호출 — deadline 저장 후 delivery.started 발행
-    // TODO: deadline이 null이어도 delivery.started가 발행되게 할 것인지 결정
     @Transactional
     public void updateFinalDispatchDeadline(UUID deliveryId, LocalDateTime deadline) {
         DeliveryEntity entity = deliveryRepository.findById(deliveryId)
@@ -215,8 +214,7 @@ public class DeliveryService {
             return true;
         }
 
-        if (status == DeliveryStatus.HUB_MOVING || status == DeliveryStatus.DESTINATION_HUB_ARRIVED
-                || status == DeliveryStatus.OUT_FOR_DELIVERY || status == DeliveryStatus.COMPLETED) {
+        if (!entity.canCancel()) {
             log.warn("[Saga] 배송 취소 불가 — deliveryId={}, status={}", deliveryId, status);
             return false;
         }

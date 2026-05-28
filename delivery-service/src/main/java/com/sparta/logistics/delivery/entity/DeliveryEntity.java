@@ -117,6 +117,10 @@ public class DeliveryEntity extends BaseEntity {
         this.currentHubId = hubId;
     }
 
+    public boolean canCancel() {
+        return this.status.canTransitionTo(DeliveryStatus.CANCELLED);
+    }
+
     public void delete(UUID actorId) {
         softDelete(actorId);
     }

@@ -52,11 +52,28 @@ public class DeliveryEventHandler {
             return;
         }
 
-        if (event.sourceHubId() == null || event.destinationHubId() == null) {
+        // hub-service가 이벤트 레벨 sourceHubId를 발행하지 않으므로 items[0]에서 파생
+        // 허브당 1이벤트 구조 전제 — 모든 items의 sourceHubId가 동일함
+        UUID sourceHubId = event.sourceHubId();
+        if (sourceHubId == null && !event.orderItems().isEmpty()) {
+            sourceHubId = event.orderItems().get(0).sourceHubId();
+        }
+
+        if (sourceHubId == null || event.destinationHubId() == null) {
             log.warn("[Kafka] 허브 ID null — orderId={}", event.orderId());
             eventPublisher.publishCreationFailed(event.orderId(), null, "INVALID_HUB_ID",
                     toRestoreItems(event.orderItems()));
             return;
+        }
+
+        final UUID resolvedSourceHubId = sourceHubId;
+        // sourceHubId가 이벤트 레벨에 없을 경우 파생값으로 새 DTO 재구성
+        if (event.sourceHubId() == null) {
+            event = new StockReservedEventDto(
+                    event.orderId(), event.receiverId(), resolvedSourceHubId,
+                    event.destinationHubId(), event.deliveryAddress(),
+                    event.orderItems(), event.totalDeliveryCount()
+            );
         }
 
         // user-service Feign 호출 — 3회 retry 후 실패 시 BusinessException (CB 내부 예외 포함)

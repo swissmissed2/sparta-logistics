@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -75,6 +76,10 @@ public class DeliveryRouteEntity extends BaseEntity {
 
     @Column
     private LocalDateTime arrivedAt;
+
+    @Version
+    @SuppressWarnings("unused")
+    private long version; // 낙관적 락 — 동시 route 상태 변경 충돌 방지
 
     public DeliveryRouteEntity(DeliveryEntity delivery, int sequence, RouteType routeType,
                                UUID sourceHubId, UUID destinationHubId,
