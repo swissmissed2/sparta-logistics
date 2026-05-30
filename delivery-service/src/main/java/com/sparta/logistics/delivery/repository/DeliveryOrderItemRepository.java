@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface DeliveryOrderItemRepository extends JpaRepository<DeliveryOrderItemEntity, UUID> {
     List<DeliveryOrderItemEntity> findByDelivery_Id(UUID deliveryId);
+
+    void deleteByDelivery_Id(UUID deliveryId);
 }

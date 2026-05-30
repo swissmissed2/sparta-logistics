@@ -222,6 +222,7 @@ public class DeliveryService {
             public void afterCommit() {
                 try {
                     eventPublisher.publishStarted(deliveryId, orderId, items);
+                    deliveryOrderItemRepository.deleteByDelivery_Id(deliveryId);
                 } catch (Exception e) {
                     // offset 이미 커밋됨 — delivery.started 유실, 수동 처리 필요
                     log.error("[Kafka][수동처리 필요] delivery.started 발행 실패(afterCommit) — deliveryId={}",
