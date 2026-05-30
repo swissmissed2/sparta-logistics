@@ -65,6 +65,60 @@ class DeliveryRouteServiceTest {
         doNothing().when(permissionChecker).checkRouteWritePermission(any(), any(), any(), any(), any());
     }
 
+    // ── Issue 2: HUB_TO_HUB IN_TRANSIT 상태 전이 ─────────────────────────────
+
+    @Test
+    void HUB_TO_HUB_첫_구간_IN_TRANSIT시_HUB_WAITING에서_HUB_MOVING으로_전환() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID routeId = UUID.randomUUID();
+        DeliveryEntity d = delivery(deliveryId);
+        // 초기 상태: HUB_WAITING
+        d.changeStatus(DeliveryStatus.HUB_WAITING);
+        DeliveryRouteEntity r = route(d, RouteType.HUB_TO_HUB);
+        stub(deliveryId, d, routeId, r);
+
+        service.updateRoute(deliveryId, routeId,
+                new DeliveryRouteUpdateRequest(RouteStatus.IN_TRANSIT, null, null),
+                UUID.randomUUID(), Role.MASTER, null);
+
+        assertThat(d.getStatus()).isEqualTo(DeliveryStatus.HUB_MOVING);
+    }
+
+    @Test
+    void HUB_TO_HUB_두번째_구간_IN_TRANSIT시_이미_HUB_MOVING이면_상태_유지() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID routeId = UUID.randomUUID();
+        DeliveryEntity d = delivery(deliveryId);
+        d.changeStatus(DeliveryStatus.HUB_WAITING);
+        d.changeStatus(DeliveryStatus.HUB_MOVING); // 첫 구간 완료로 이미 HUB_MOVING
+        DeliveryRouteEntity r = new DeliveryRouteEntity(d, 1, RouteType.HUB_TO_HUB,
+                UUID.randomUUID(), UUID.randomUUID(), BigDecimal.ONE, 60); // 두 번째 구간
+        stub(deliveryId, d, routeId, r);
+
+        service.updateRoute(deliveryId, routeId,
+                new DeliveryRouteUpdateRequest(RouteStatus.IN_TRANSIT, null, null),
+                UUID.randomUUID(), Role.MASTER, null);
+
+        assertThat(d.getStatus()).isEqualTo(DeliveryStatus.HUB_MOVING);
+    }
+
+    @Test
+    void HUB_TO_HUB_IN_TRANSIT시_예상치_못한_상태면_ROUTE_SEQUENCE_VIOLATED() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID routeId = UUID.randomUUID();
+        DeliveryEntity d = delivery(deliveryId);
+        // CREATED 상태 — HUB_WAITING도 HUB_MOVING도 아님
+        DeliveryRouteEntity r = route(d, RouteType.HUB_TO_HUB);
+        stub(deliveryId, d, routeId, r);
+
+        assertThatThrownBy(() -> service.updateRoute(deliveryId, routeId,
+                new DeliveryRouteUpdateRequest(RouteStatus.IN_TRANSIT, null, null),
+                UUID.randomUUID(), Role.MASTER, null))
+                .isInstanceOf(BusinessException.class)
+                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
+                        .isEqualTo(DeliveryErrorCode.ROUTE_SEQUENCE_VIOLATED));
+    }
+
     // ── Fix ④: ROUTE_SEQUENCE_VIOLATED ──────────────────────────────────────
 
     @Test
