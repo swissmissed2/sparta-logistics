@@ -84,9 +84,12 @@ public class DeliveryRouteService {
     private void syncDeliveryStatus(DeliveryEntity delivery, DeliveryRouteEntity route, UUID actorId) {
         switch (route.getStatus()) {
             case IN_TRANSIT -> {
-                if (route.getRouteType() == RouteType.HUB_TO_HUB
-                        && delivery.getStatus() == DeliveryStatus.HUB_WAITING) {
-                    delivery.changeStatus(DeliveryStatus.HUB_MOVING);
+                if (route.getRouteType() == RouteType.HUB_TO_HUB) {
+                    if (delivery.getStatus() == DeliveryStatus.HUB_WAITING) {
+                        delivery.changeStatus(DeliveryStatus.HUB_MOVING);
+                    } else if (delivery.getStatus() != DeliveryStatus.HUB_MOVING) {
+                        throw new BusinessException(DeliveryErrorCode.ROUTE_SEQUENCE_VIOLATED);
+                    }
                 }
                 if (route.getRouteType() == RouteType.HUB_TO_COMPANY) {
                     if (delivery.getStatus() != DeliveryStatus.DESTINATION_HUB_ARRIVED) {
