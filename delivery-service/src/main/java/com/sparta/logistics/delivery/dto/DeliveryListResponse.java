@@ -10,33 +10,26 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-// TODO: 목록 조회 응답 객체 생성
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class DeliveryListResponse {
 
-    // TODO: 컬럼 재정비
     private UUID deliveryId;
     private UUID orderId;
     private DeliveryStatus status;
-    // TODO: name으로 받아오는 거 괜찮은지 다시 Check
-    private String sourceHubName;
-    private String destinationHubName;
-    private String deliveryManagerName;
+    private String sourceHubName;       // 허브명 미지원 시 hubId.toString() 임시 사용
+    private String destinationHubName;  // 허브명 미지원 시 hubId.toString() 임시 사용
+    private String deliveryManagerName; // SA 기준: companyDeliveryManagerId (허브명 조회 API 연동 전까지 ID 문자열)
     private LocalDateTime createdAt;
 
-    // 엔티티를 DTO로 변환
-    // TODO: from (delivery, 출발허브명, 도착허브명, 담당자명) 으로 바꾸기
-    // 조회 위치 변경
-    public static DeliveryListResponse from(DeliveryEntity delivery, String sourceHubName, String destinationHubName, String managerName) {
+    public static DeliveryListResponse from(DeliveryEntity delivery, String sourceHubName,
+                                            String destinationHubName, String managerName) {
         return DeliveryListResponse.builder()
                 .deliveryId(delivery.getId())
                 .orderId(delivery.getOrderId())
                 .status(delivery.getStatus())
-                // 서비스에서 조회하는 걸로 변경 완료
-                // TODO: 조회 null check
                 .sourceHubName(sourceHubName)
                 .destinationHubName(destinationHubName)
                 .deliveryManagerName(managerName)

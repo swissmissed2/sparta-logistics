@@ -67,7 +67,12 @@ public class DeliveryService {
             case MASTER, COMPANY_MANAGER -> {}
         }
         Page<DeliveryEntity> deliveryPage = deliveryRepository.findAllByCondition(cond, pageable);
-        return deliveryPage.map(d -> DeliveryListResponse.from(d, null, null, null));
+        return deliveryPage.map(d -> DeliveryListResponse.from(
+                d,
+                d.getSourceHubId() != null ? d.getSourceHubId().toString() : null,
+                d.getDestinationHubId() != null ? d.getDestinationHubId().toString() : null,
+                d.getCompanyDeliveryManagerId() != null ? d.getCompanyDeliveryManagerId().toString() : null
+        ));
     }
 
     // 배송 수정
