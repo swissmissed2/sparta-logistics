@@ -7,9 +7,9 @@
 ```
 p_delivery (DeliveryEntity)
     │ 1
-    │
-    │ N
-p_delivery_route (DeliveryRouteEntity)   ← @ManyToOne(fetch=LAZY)
+    ├─────────────────────────────────────────────────────┐
+    │ N                                                   │ N
+p_delivery_route (DeliveryRouteEntity)   ← @ManyToOne   p_delivery_order_item (DeliveryOrderItemEntity)   ← @ManyToOne
 
 p_delivery_log (DeliveryLogEntity)
     └── delivery_id (UUID, 간접 참조 — 외래키 없음, append-only)
@@ -155,7 +155,36 @@ CREATE INDEX idx_delivery_log_delivery_recorded
 
 ---
 
-## 5. `p_delivery_manager` — DeliveryManagerEntity
+## 5. `p_delivery_order_item` — DeliveryOrderItemEntity
+
+```sql
+CREATE TABLE p_delivery_order_item (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    delivery_id   UUID NOT NULL REFERENCES p_delivery(id),
+    order_item_id UUID,                   -- 간접 참조 → p_order_item (nullable: 레거시 이벤트 대비)
+    product_id    UUID NOT NULL,
+    hub_id        UUID NOT NULL,          -- 출처 허브 ID
+    quantity      INT NOT NULL
+    -- BaseEntity 미상속
+);
+```
+
+### 설계 결정
+
+| 항목 | 결정 | 이유 |
+|------|------|------|
+| BaseEntity 미상속 | ✅ | 이벤트 수신 시 생성 후 변경 없음, soft delete 불필요 |
+| `order_item_id` nullable | ✅ | 레거시 이벤트(orderItemId 없는 경우) 호환 |
+
+### 용도
+
+`stock.reserved` Kafka 이벤트를 통해 수신한 주문 상품 정보를 배송에 매핑하여 저장.  
+`delivery.started` 이벤트 발행 시 hub-service에 전달할 `orderItems` 페이로드 구성에 사용되며,  
+hub-service의 `p_hub_stock_log`와 `order_item_id`로 연결됩니다.
+
+---
+
+## 7. `p_delivery_manager` — DeliveryManagerEntity
 
 ```sql
 CREATE TABLE p_delivery_manager (
@@ -210,7 +239,7 @@ CREATE TABLE p_delivery_manager (
 
 ---
 
-## 6. BaseEntity (Common)
+## 8. BaseEntity (Common)
 
 ```java
 // 해당 코드는 실제 코드가 아닌, Type 및 주요 Method만 확인하는 용도입니다.
@@ -236,4 +265,4 @@ public abstract class BaseEntity {
 ```
 
 `DeliveryEntity`, `DeliveryRouteEntity`, `DeliveryManagerEntity`는 BaseEntity를 상속합니다.  
-`DeliveryLogEntity`는 append-only 특성으로 BaseEntity를 **상속하지 않습니다**.
+`DeliveryLogEntity`, `DeliveryOrderItemEntity`는 BaseEntity를 **상속하지 않습니다**.
