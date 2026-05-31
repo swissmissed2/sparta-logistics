@@ -72,7 +72,7 @@ erDiagram
         INTEGER change_quantity     "+증가 / -감소"
         INTEGER before_quantity
         INTEGER after_quantity
-        VARCHAR change_type         "INBOUND|ORDER_DECREASE|CANCEL_RESTORE|RETURN_RESTORE|MANUAL_ADJUST"
+        VARCHAR change_type         "INBOUND|ORDER_RESERVE|ORDER_DECREASE|CANCEL_RESTORE|RETURN_RESTORE|MANUAL_ADJUST|COMPENSATE"
     }
 
     p_hub         ||--o{ p_hub_route     : "source_hub_id"
@@ -229,9 +229,19 @@ erDiagram
         TIMESTAMP recorded_at
     }
 
-    p_delivery_manager |o--o{ p_delivery        : "company_delivery_manager_id"
-    p_delivery         ||--o{ p_delivery_route  : "delivery_id"
-    p_delivery         ||--o{ p_delivery_log    : "delivery_id"
+    p_delivery_order_item {
+        UUID      id              PK
+        UUID      delivery_id     FK
+        UUID      order_item_id       "간접참조 → p_order_item (nullable, 레거시 이벤트 대비)"
+        UUID      product_id
+        UUID      hub_id              "출처 허브 ID"
+        INTEGER   quantity
+    }
+
+    p_delivery_manager |o--o{ p_delivery              : "company_delivery_manager_id"
+    p_delivery         ||--o{ p_delivery_route         : "delivery_id"
+    p_delivery         ||--o{ p_delivery_log           : "delivery_id"
+    p_delivery         ||--o{ p_delivery_order_item    : "delivery_id"
 ```
 
 ---

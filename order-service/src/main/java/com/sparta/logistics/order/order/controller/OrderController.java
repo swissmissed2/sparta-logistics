@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -107,6 +108,24 @@ public class OrderController {
     ) {
         OrderDetailResponse response = orderService.cancelOrder(orderId, request.getCancelReason(), userId, role, userHubId);
         return ResponseEntity.ok(ApiResponse.ok("주문이 취소되었습니다.", response));
+    }
+
+    /** 주문-업체 소속 확인 (내부 서비스 전용) **/
+    @GetMapping("/{orderId}/company-check")
+    public ResponseEntity<ApiResponse<Boolean>> checkOrderBelongsToCompany(
+            @PathVariable UUID orderId,
+            @RequestParam UUID companyId
+    ) {
+        boolean belongs = orderService.isOrderBelongsToCompany(orderId, companyId);
+        return ResponseEntity.ok(ApiResponse.ok(belongs));
+    }
+
+    /** 업체 소속 주문 ID 목록 조회 (내부 서비스 전용) **/
+    @GetMapping("/by-company")
+    public ResponseEntity<ApiResponse<List<UUID>>> getOrderIdsByCompany(
+            @RequestParam UUID companyId
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(orderService.getOrderIdsByCompanyId(companyId)));
     }
 
     /** 주문 삭제 (Soft Delete) **/

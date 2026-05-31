@@ -54,10 +54,11 @@ public class DeliveryController {
             @RequestHeader("X-User-Id") UUID userId,
             @RequestHeader("X-User-Role") Role role,
             @RequestHeader(value = "X-User-HubId", required = false) UUID hubId,
+            @RequestHeader(value = "X-User-CompanyId", required = false) UUID companyId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @ModelAttribute DeliverySearchCond cond
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(deliveryService.getDeliveryList(userId, role, hubId, pageable, cond)));
+        return ResponseEntity.ok(ApiResponse.ok(deliveryService.getDeliveryList(userId, role, hubId, companyId, pageable, cond)));
     }
 
     @PutMapping("/{deliveryId}")

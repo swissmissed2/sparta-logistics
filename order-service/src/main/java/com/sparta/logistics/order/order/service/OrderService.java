@@ -125,6 +125,18 @@ public class OrderService {
         }
     }
 
+    /** 주문-업체 소속 확인 (내부 서비스 전용) **/
+    @Transactional(readOnly = true)
+    public boolean isOrderBelongsToCompany(UUID orderId, UUID companyId) {
+        return orderRepository.existsByOrderIdAndCompanyId(orderId, companyId);
+    }
+
+    /** 업체 소속 주문 ID 목록 조회 (내부 서비스 전용) **/
+    @Transactional(readOnly = true)
+    public List<UUID> getOrderIdsByCompanyId(UUID companyId) {
+        return orderRepository.findOrderIdsByCompanyId(companyId);
+    }
+
     /** 주문 삭제 (Soft Delete) **/
     @Transactional
     public void deleteOrder(UUID orderId, UUID userId, Role role) {

@@ -23,6 +23,7 @@
 | `ai.deadline.calculated` | SlackService | DeliveryService | Choreography |
 | `delivery.cancellation.failed` | DeliveryService  |  OrderService (Orch.)  |  Orchestration 보상  |
 | `stock.restoration.failed` | HubService  |  OrderService (Orch.)  |  Orchestration 보상  |
+| `hub.deleted` | HubService | 관련 서비스 | 허브 삭제 cascade |
 - 비고
     - [x]  파티션 키 도입 제안 ✅
         - Kafka는 같은 파티션 내에서 프로듀서가 보낸 순서를 보장합니다.
@@ -213,9 +214,8 @@ sequenceDiagram
 | --- | --- |
 | 서비스 | **HubService** |
 | 구독 토픽 | `delivery.started` |
-| 처리 내용 | `orderItems` 순회하여 각 상품 `reserved - N`, `HubStockChangeType.DELIVERY_STARTED` 이력 기록 |
+| 처리 내용 | `orderItems` 순회하여 각 상품 `reserved - N`, `HubStockChangeType.ORDER_DECREASE` 이력 기록 |
 | 파티션 키 | `deliveryId` |
-| 비고 | `HubStockChangeType`에 `DELIVERY_STARTED` 타입 추가 필요 |
 - 비고
     - [x]  `delivery.start` 의 파티션 키를 무엇으로 해야 할까요? ✅
         - [ ]  `orderId` ❌

@@ -3,6 +3,7 @@ package com.sparta.logistics.delivery.service;
 import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.exception.BusinessException;
 import com.sparta.logistics.common.exception.CommonErrorCode;
+import com.sparta.logistics.delivery.client.FeignCallService;
 import com.sparta.logistics.delivery.entity.DeliveryEntity;
 import com.sparta.logistics.delivery.entity.DeliveryManagerEntity;
 import com.sparta.logistics.delivery.entity.DeliveryRouteEntity;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class DeliveryPermissionChecker {
 
     private final DeliveryRouteRepository routeRepository;
+    private final FeignCallService feignCallService;
 
     // 배송 단건 조회 — 권한 없으면 403
     public void checkDeliveryReadPermission(DeliveryEntity delivery, UUID userId, Role role,
@@ -30,9 +32,11 @@ public class DeliveryPermissionChecker {
             if (userId != null && userId.equals(delivery.getCompanyDeliveryManagerId())) return;
             throw new BusinessException(CommonErrorCode.FORBIDDEN);
         }
-        // COMPANY_MANAGER: companyId 기반 주문 소유 확인은 order-service 연동 필요
-        // 현재는 COMPANY_MANAGER도 허용 (추후 order-service와 협의 후 companyId 검증 추가)
-        if (role == Role.COMPANY_MANAGER) return;
+        if (role == Role.COMPANY_MANAGER) {
+            if (companyId != null && delivery.getOrderId() != null
+                    && feignCallService.checkOrderBelongsToCompany(delivery.getOrderId(), companyId)) return;
+            throw new BusinessException(CommonErrorCode.FORBIDDEN);
+        }
         throw new BusinessException(CommonErrorCode.FORBIDDEN);
     }
 

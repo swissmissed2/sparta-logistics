@@ -27,6 +27,7 @@ public interface DeliveryRepository extends JpaRepository<DeliveryEntity, UUID> 
             "(:#{#cond.companyDeliveryManagerId} IS NULL OR d.companyDeliveryManagerId = :#{#cond.companyDeliveryManagerId}) AND " +
             "(:#{#cond.authorizedHubId} IS NULL OR (d.sourceHubId = :#{#cond.authorizedHubId} OR d.destinationHubId = :#{#cond.authorizedHubId})) AND " +
             "(:#{#cond.authorizedManagerId} IS NULL OR d.companyDeliveryManagerId = :#{#cond.authorizedManagerId}) AND " +
+            "(:#{#cond.authorizedOrderIds} IS NULL OR d.orderId IN :#{#cond.authorizedOrderIds}) AND " +
             "d.deletedAt IS NULL")
     Page<DeliveryEntity> findAllByCondition(
             @Param("cond") DeliverySearchCond cond,

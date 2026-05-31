@@ -17,6 +17,21 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByStatusAndUpdatedAtBefore(OrderStatus status, LocalDateTime threshold);
 
     @Query("""
+            SELECT o.id FROM Order o
+            WHERE (o.requesterCompanyId = :companyId OR o.receiverCompanyId = :companyId)
+              AND o.deletedAt IS NULL
+            """)
+    List<UUID> findOrderIdsByCompanyId(@Param("companyId") UUID companyId);
+
+    @Query("""
+            SELECT COUNT(o) > 0 FROM Order o
+            WHERE o.id = :orderId
+              AND (o.requesterCompanyId = :companyId OR o.receiverCompanyId = :companyId)
+              AND o.deletedAt IS NULL
+            """)
+    boolean existsByOrderIdAndCompanyId(@Param("orderId") UUID orderId, @Param("companyId") UUID companyId);
+
+    @Query("""
             SELECT o FROM Order o
             WHERE (:requesterUserId IS NULL OR o.requesterUserId = :requesterUserId)
               AND (:requesterCompanyId IS NULL OR o.requesterCompanyId = :requesterCompanyId)

@@ -17,6 +17,7 @@ import com.sparta.logistics.delivery.entity.enums.DeliveryStatus;
 import com.sparta.logistics.delivery.entity.enums.DeliveryEventType;
 import com.sparta.logistics.delivery.entity.enums.RouteType;
 import com.sparta.logistics.delivery.exception.DeliveryErrorCode;
+import com.sparta.logistics.delivery.client.FeignCallService;
 import com.sparta.logistics.delivery.kafka.producer.DeliveryEventPublisher;
 import com.sparta.logistics.delivery.repository.DeliveryLogRepository;
 import com.sparta.logistics.delivery.repository.DeliveryOrderItemRepository;
@@ -45,6 +46,7 @@ public class DeliveryService {
     private final DeliveryOrderItemRepository deliveryOrderItemRepository;
     private final DeliveryLogRepository deliveryLogRepository;
     private final DeliveryPermissionChecker permissionChecker;
+    private final FeignCallService feignCallService;
     private final DeliveryEventPublisher eventPublisher;
     private final DeliveryAssignmentService assignmentService;
 
@@ -60,11 +62,12 @@ public class DeliveryService {
     // 배송 목록 조회
     @Transactional(readOnly = true)
     public Page<DeliveryListResponse> getDeliveryList(UUID userId, Role role, UUID hubId,
-                                                       Pageable pageable, DeliverySearchCond cond) {
+                                                       UUID companyId, Pageable pageable, DeliverySearchCond cond) {
         switch (role) {
             case HUB_MANAGER -> cond.setAuthorizedHubId(hubId);
             case DELIVERY_MANAGER -> cond.setAuthorizedManagerId(userId);
-            case MASTER, COMPANY_MANAGER -> {}
+            case COMPANY_MANAGER -> cond.setAuthorizedOrderIds(feignCallService.fetchOrderIdsByCompany(companyId));
+            case MASTER -> {}
         }
         Page<DeliveryEntity> deliveryPage = deliveryRepository.findAllByCondition(cond, pageable);
         return deliveryPage.map(d -> DeliveryListResponse.from(d, null, null, null));
