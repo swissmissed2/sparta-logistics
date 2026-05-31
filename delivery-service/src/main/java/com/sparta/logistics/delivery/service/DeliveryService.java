@@ -206,7 +206,6 @@ public class DeliveryService {
     }
 
     // ai.deadline.calculated 이벤트 수신 시 호출 — deadline 저장 후 delivery.started 발행
-    // TODO: deadline이 null이어도 delivery.started가 발행되게 할 것인지 결정
     @Transactional
     public void updateFinalDispatchDeadline(UUID deliveryId, LocalDateTime deadline) {
         DeliveryEntity entity = deliveryRepository.findById(deliveryId)
