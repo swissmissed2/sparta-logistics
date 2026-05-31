@@ -52,7 +52,6 @@
 |---|---|
 | [docs/ERD.md](docs/ERD.md) | ERD 다이어그램 |
 | [docs/SAGA.md](docs/SAGA.md) | Saga 패턴 의사결정, Kafka 토픽 전체 목록, 시퀀스 다이어그램 |
-| [delivery-service/docs/](delivery-service/docs/) | 배송 서비스 API 명세, 아키텍처, 상태 머신, 권한 정책 등 |
 | [docs/auth](docs/auth) | 인증/인가 흐름 |
 
 ---
@@ -71,6 +70,7 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### 2단계: 인프라 기동
@@ -162,3 +162,7 @@ sequenceDiagram
 | 업체 담당자 | `COMPANY_MANAGER` | 소속 업체 정보 및 주문 관리 |
 
 API 요청 시 Gateway가 JWT를 검증하고 `X-User-Id`, `X-User-Role`, `X-User-HubId`(선택), `X-User-CompanyId`(선택) 헤더를 하위 서비스에 전달합니다.
+
+## 팀 문서
+
+자세한 설계 사항은 [SA문서](https://www.notion.so/teamsparta/SA-3602dc3ef514809eb4defc610e32fa9e#3602dc3ef51480e6af10e8648e8c664d)를 참고하세요.
