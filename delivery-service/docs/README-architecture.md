@@ -95,7 +95,7 @@ delivery.creation.failed ──▶ order-service      : 주문 취소 (보상 Sa
 ai.deadline.calculated ──▶  delivery-service   : 최종 발송 시한 업데이트
 ```
 
-> 상세 토픽·페이로드 스펙 → [`README-kafka-events.md`](./delivery-service/README-delivery-design.md) 참고
+> 상세 토픽·페이로드 스펙 → [`README-delivery-design.md`](changes/README-delivery-design.md) 참고
 
 ---
 
@@ -127,10 +127,11 @@ sparta-logistics-ai/
 
 ```
 delivery-service
-  ├── → user-service     (Feign: slackId 조회)
-  ├── → hub-service      (Feign: 허브 존재 검증)
-  └── ← hub-service      (Kafka: stock.reserved 소비)
-  └── ← slack-service    (Kafka: ai.deadline.calculated 소비)
+  ├── → user-service    (Feign: slackId 조회)
+  ├── → hub-service     (Feign: 허브 존재 검증, 경로 세그먼트 조회)
+  ├── → order-service   (Feign: COMPANY_MANAGER 배송 소유권 검증)
+  ├── ← hub-service     (Kafka: stock.reserved 소비)
+  ├── ← slack-service   (Kafka: ai.deadline.calculated 소비)
   └── → hub-service, order-service (Kafka: delivery.creation.failed 발행)
 ```
 

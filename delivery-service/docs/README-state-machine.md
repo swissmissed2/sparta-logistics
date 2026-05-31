@@ -5,26 +5,23 @@
 ## 1. 배송 상태 전이 다이어그램
 
 ```
-                     ┌─────────────────────────────────────────┐
-                     │                CANCELLED                │
-                     │  (모든 상태에서 CANCELLED 가능,            │
-                     │   COMPLETED 제외)                        │
-                     └─────────────────────────────────────────┘
-                              ↑         ↑         ↑        ↑
-                              │         │         │        │
-   [Kafka stock.reserved]     │         │         │        │
-         ↓                    │         │         │        │
-    ┌─────────┐      ┌────────────┐  ┌───────────┐  ┌──────────────────────┐
-    │ CREATED │─────▶│HUB_WAITING│─▶│ HUB_MOVING│─▶│ DESTINATION_HUB_    │
-    └─────────┘      └────────────┘  └───────────┘  │     ARRIVED         │
-                                                     └─────────────────────┘
-                                                                │
-                                                                ▼
-                                                      ┌─────────────────┐
-                                                      │ OUT_FOR_DELIVERY│ ──▶ ┌───────────┐
-                                                      └─────────────────┘     │ COMPLETED │
-                                                                               └───────────┘
-                                                                                  (종료 상태)
+                     ┌──────────┐
+                     │CANCELLED │  ← CREATED, HUB_WAITING에서만 전이 가능
+                     └──────────┘
+                          ↑    ↑
+                          │    │
+   [Kafka stock.reserved] │    │
+         ↓                │    │
+    ┌─────────┐      ┌────────────┐      ┌───────────┐      ┌──────────────────────┐
+    │ CREATED │─────▶│HUB_WAITING│─────▶│ HUB_MOVING│─────▶│ DESTINATION_HUB_    │
+    └─────────┘      └────────────┘      └───────────┘      │     ARRIVED         │
+                                                             └─────────────────────┘
+                                                                        │
+                                                                        ▼
+                                                              ┌─────────────────┐      ┌───────────┐
+                                                              │ OUT_FOR_DELIVERY│─────▶│ COMPLETED │
+                                                              └─────────────────┘      └───────────┘
+                                                                                          (종료 상태)
 ```
 
 ---
@@ -35,11 +32,14 @@
 |----------|-----------------|
 | `CREATED` | `HUB_WAITING`, `CANCELLED` |
 | `HUB_WAITING` | `HUB_MOVING`, `CANCELLED` |
-| `HUB_MOVING` | `DESTINATION_HUB_ARRIVED`, `CANCELLED` |
-| `DESTINATION_HUB_ARRIVED` | `OUT_FOR_DELIVERY`, `CANCELLED` |
-| `OUT_FOR_DELIVERY` | `COMPLETED`, `CANCELLED` |
+| `HUB_MOVING` | `DESTINATION_HUB_ARRIVED` |
+| `DESTINATION_HUB_ARRIVED` | `OUT_FOR_DELIVERY` |
+| `OUT_FOR_DELIVERY` | `COMPLETED` |
 | `COMPLETED` | _(없음 — 종료 상태)_ |
 | `CANCELLED` | _(없음 — 종료 상태)_ |
+
+> CANCELLED 전이는 `CREATED`, `HUB_WAITING` 상태에서만 허용됩니다.  
+> `HUB_MOVING` 이후(이동 중·도착·배송중)에는 취소 불가 — `INVALID_STATUS_TRANSITION(DELIVERY_004)` 반환.
 
 ---
 
@@ -64,9 +64,9 @@
 private static final Map<DeliveryStatus, Set<DeliveryStatus>> ALLOWED = Map.of(
     CREATED,                 Set.of(HUB_WAITING, CANCELLED),
     HUB_WAITING,             Set.of(HUB_MOVING, CANCELLED),
-    HUB_MOVING,              Set.of(DESTINATION_HUB_ARRIVED, CANCELLED),
-    DESTINATION_HUB_ARRIVED, Set.of(OUT_FOR_DELIVERY, CANCELLED),
-    OUT_FOR_DELIVERY,        Set.of(COMPLETED, CANCELLED),
+    HUB_MOVING,              Set.of(DESTINATION_HUB_ARRIVED),
+    DESTINATION_HUB_ARRIVED, Set.of(OUT_FOR_DELIVERY),
+    OUT_FOR_DELIVERY,        Set.of(COMPLETED),
     COMPLETED,               Set.of(),
     CANCELLED,               Set.of()
 );

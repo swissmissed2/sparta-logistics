@@ -76,6 +76,13 @@ public interface HubServiceClient {
     // 200 OK → 허브 존재 확인 완료 / 호출 실패 시 → Fallback으로 위임
     @GetMapping("/api/v1/hubs/{hubId}/exists")
     void checkHubExists(@PathVariable UUID hubId);
+
+    // 배송 생성 시 출발·도착 허브 간 경로 세그먼트 조회
+    @GetMapping("/api/v1/hub-routes/segments")
+    ApiResponse<List<HubRouteSegmentResponse>> getRouteSegments(
+            @RequestParam("sourceHubId") UUID sourceHubId,
+            @RequestParam("destinationHubId") UUID destinationHubId
+    );
 }
 ```
 
@@ -125,7 +132,49 @@ if (req.managerType() == DeliveryManagerType.COMPANY_DELIVERY) {
 
 ---
 
-## 3. Kafka 이벤트 계약 (발행/구독)
+## 3. order-service 연동
+
+### 목적
+
+COMPANY_MANAGER 역할의 사용자가 배송에 접근할 때, 해당 배송의 주문이 해당 업체 소속인지 검증합니다.
+
+### Feign 클라이언트
+
+```java
+// client/OrderServiceClient.java
+@FeignClient(name = "order-service", fallback = OrderServiceClientFallback.class)
+public interface OrderServiceClient {
+
+    // 단건 조회 권한 검증: orderId가 companyId 소속인지 확인
+    @GetMapping("/api/v1/orders/{orderId}/company-check")
+    ApiResponse<Boolean> checkOrderBelongsToCompany(
+            @PathVariable("orderId") UUID orderId,
+            @RequestParam("companyId") UUID companyId
+    );
+
+    // 목록 조회 권한 필터: companyId 소속 orderId 목록 조회
+    @GetMapping("/api/v1/orders/by-company")
+    ApiResponse<List<UUID>> getOrderIdsByCompany(@RequestParam("companyId") UUID companyId);
+}
+```
+
+### 호출 위치
+
+| 메서드 | 호출 위치 | 용도 |
+|--------|---------|------|
+| `checkOrderBelongsToCompany` | `DeliveryPermissionChecker.checkDeliveryReadPermission()` | 단건 조회 시 COMPANY_MANAGER 소유권 확인 |
+| `getOrderIdsByCompany` | `DeliveryService.getDeliveryList()` | 목록 조회 시 COMPANY_MANAGER IN 필터 구성 |
+
+### 에러 처리
+
+| 상황 | 처리 |
+|------|------|
+| order-service 호출 실패 | Fallback → `DELIVERY_ORDER_001` (503 Service Unavailable) |
+| belongs = false | `COMMON_403` (403 Forbidden) |
+
+---
+
+## 4. Kafka 이벤트 계약 (발행/구독)
 
 ### 소비 토픽
 
@@ -187,12 +236,15 @@ if (req.managerType() == DeliveryManagerType.COMPANY_DELIVERY) {
 
 ---
 
-## 4. 서비스 의존 관계 요약
+## 5. 서비스 의존 관계 요약
 
 ```
 delivery-service
-  ├── [Feign] → user-service   GET /api/v1/users/{userId}
-  ├── [Feign] → hub-service    GET /api/v1/hubs/{hubId}/exists
+  ├── [Feign] → user-service    GET /api/v1/users/{userId}
+  ├── [Feign] → hub-service     GET /api/v1/hubs/{hubId}/exists
+  ├── [Feign] → hub-service     GET /api/v1/hub-routes/segments
+  ├── [Feign] → order-service   GET /api/v1/orders/{orderId}/company-check
+  ├── [Feign] → order-service   GET /api/v1/orders/by-company
   ├── [Kafka 소비] ← hub-service    stock.reserved
   ├── [Kafka 소비] ← slack-service  ai.deadline.calculated
   └── [Kafka 발행] → hub-service, order-service  delivery.creation.failed
@@ -200,10 +252,10 @@ delivery-service
 
 ---
 
-## 5. 미확인 사항
+## 6. 미확인 사항
 
-| 항목                                             | 협의 대상 | 내용 | 우선순위  |
-|------------------------------------------------|---------|------|-------|
-| `GET /api/v1/users/{userId}` 응답                | user-service | `slackId` 필드 포함 여부 | 🔴 필수 |
-| 1개의 허브에서라도 배송 생성 실패가 된다면, 전체 실패로 간주할지 말지 협의 필요 | delivery-service | `delivery.creation.failed` 로직 구현 필요 | 🔴 필수 |  
-| COMPANY_MANAGER 배송 소유 검증                       | order-service | companyId → orderId 검증 API | 🟢 추후 |
+| 항목 | 협의 대상 | 내용 | 우선순위 |
+|------|---------|------|-------|
+| `GET /api/v1/users/{userId}` 응답 | user-service | `slackId` 필드 포함 여부 | 🔴 필수 |
+| 1개의 허브에서라도 배송 생성 실패 시 전체 실패 처리 여부 | delivery-service | `delivery.creation.failed` 로직 구현 필요 | 🔴 필수 |
+| COMPANY_MANAGER 배송 소유 검증 | order-service | ✅ 구현 완료 — `OrderServiceClient` 연동 |  🟢 완료 |

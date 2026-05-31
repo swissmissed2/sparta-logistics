@@ -46,8 +46,8 @@ GET /api/v1/deliveries/{deliveryId}
 **에러**
 | 코드 | HTTP | 설명 |
 |------|------|------|
-| `DELIVERY_404` | 404 | 배송 없음 |
-| `DELIVERY_001` | 400 | 이미 삭제된 배송 |
+| `DELIVERY_001` | 404 | 배송 없음 |
+| `DELIVERY_003` | 400 | 이미 삭제된 배송 |
 | `COMMON_403` | 403 | 권한 없음 |
 
 ---
@@ -120,7 +120,7 @@ Content-Type: application/json
 **응답 200 OK** — DeliveryDetailResponse
 
 **권한**: MASTER, HUB_MANAGER(자기 허브), DELIVERY_MANAGER(자신 담당)  
-**에러**: `DELIVERY_002` (허용되지 않는 전이), `COMMON_409` (낙관적 락 충돌)
+**에러**: `DELIVERY_004` (허용되지 않는 전이), `DELIVERY_002` (낙관적 락 충돌)
 
 ---
 
@@ -130,10 +130,10 @@ Content-Type: application/json
 DELETE /api/v1/deliveries/{deliveryId}
 ```
 
-**응답**: 204 No Content
+**응답**: 200 OK
 
 **권한**: MASTER만  
-**에러**: `COMMON_403` (권한 없음), `DELIVERY_001` (이미 삭제됨)
+**에러**: `COMMON_403` (권한 없음), `DELIVERY_003` (이미 삭제됨)
 
 ---
 
@@ -164,7 +164,7 @@ Content-Type: application/json
 **응답**: 201 Created, Location: `/api/v1/delivery-managers/{managerId}`
 
 **권한**: MASTER, HUB_MANAGER(자기 허브)  
-**에러**: `DELIVERY_MGR_409` (이미 등록된 담당자)
+**에러**: `DELIVERY_MGR_002` (이미 등록된 담당자)
 
 ---
 
@@ -252,7 +252,7 @@ DELETE /api/v1/delivery-managers/{managerId}
 **응답**: 204 No Content
 
 **권한**: MASTER, HUB_MANAGER(자기 허브)  
-**제약**: status == WORKING인 경우 삭제 불가 (`DELIVERY_MGR_002`)
+**제약**: status == WORKING인 경우 삭제 불가 (`DELIVERY_MGR_004`)
 
 ---
 
