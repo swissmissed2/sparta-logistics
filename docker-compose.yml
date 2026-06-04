@@ -67,6 +67,208 @@ services:
     networks:
       - sparta-net
 
+  # Config Server (가장 먼저 기동)
+  config-server:
+    build:
+      context: ./config-server
+    container_name: sparta-config-server
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    networks:
+      - sparta-net
+
+  # Discovery Server (Eureka)
+  discovery-server:
+    build:
+      context: ./discovery-server
+    container_name: sparta-discovery-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+    networks:
+      - sparta-net
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: sparta-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      - config-server
+      - discovery-server
+    networks:
+      - sparta-net
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+    container_name: sparta-user-service
+    ports:
+      - "19091:19091"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - sparta-net
+
+  # Hub Service
+  hub-service:
+    build:
+      context: ./hub-service
+    container_name: sparta-hub-service
+    ports:
+      - "19092:19092"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - kafka
+    networks:
+      - sparta-net
+
+  # Company Service
+  company-service:
+    build:
+      context: ./company-service
+    container_name: sparta-company-service
+    ports:
+      - "19093:19093"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - sparta-net
+
+  # Product Service
+  product-service:
+    build:
+      context: ./product-service
+    container_name: sparta-product-service
+    ports:
+      - "19094:19094"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - kafka
+    networks:
+      - sparta-net
+
+  # Order Service
+  order-service:
+    build:
+      context: ./order-service
+    container_name: sparta-order-service
+    ports:
+      - "19095:19095"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - sparta-net
+
+  # Delivery Service
+  delivery-service:
+    build:
+      context: ./delivery-service
+    container_name: sparta-delivery-service
+    ports:
+      - "19096:19096"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - kafka
+    networks:
+      - sparta-net
+
+  # Slack Service
+  slack-service:
+    build:
+      context: ./slack-service
+    container_name: sparta-slack-service
+    ports:
+      - "19097:19097"
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      - config-server
+      - discovery-server
+      - postgres
+      - kafka
+    networks:
+      - sparta-net
+
 volumes:
   postgres-data:
   redis-data:
