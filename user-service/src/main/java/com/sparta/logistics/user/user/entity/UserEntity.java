@@ -77,6 +77,9 @@ public class UserEntity extends BaseEntity {
                 if (this.companyId == null) {
                     throw new BusinessException(UserErrorCode.COMPANY_ID_REQUIRED);
                 }
+                if (this.hubId != null) {
+                    throw new BusinessException(UserErrorCode.HUB_ID_NOT_ALLOWED);
+                }
                 break;
             case MASTER:
                 if (this.hubId != null || this.companyId != null) {
