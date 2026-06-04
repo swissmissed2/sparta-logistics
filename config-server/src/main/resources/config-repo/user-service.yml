@@ -13,6 +13,9 @@ spring:
       hibernate:
         default_schema: schema_user
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
   cloud:
     openfeign:
       circuitbreaker:

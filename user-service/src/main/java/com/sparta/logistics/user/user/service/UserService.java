@@ -62,6 +62,24 @@ public class UserService {
         return UpdateResponse.from(user);
     }
 
+    // 허브 삭제 cascade — 소속 사용자 일괄 soft-delete
+    @Transactional
+    public void softDeleteUsersByHubId(UUID hubId, UUID deletedBy) {
+        userRepository.findAllByHubIdAndDeletedAtIsNull(hubId).forEach(user -> {
+            user.softDelete(deletedBy);
+            refreshTokenRepository.delete(user.getId().toString());
+        });
+    }
+
+    // 업체 삭제 cascade — 소속 사용자 일괄 soft-delete
+    @Transactional
+    public void softDeleteUsersByCompanyId(UUID companyId, UUID deletedBy) {
+        userRepository.findAllByCompanyIdAndDeletedAtIsNull(companyId).forEach(user -> {
+            user.softDelete(deletedBy);
+            refreshTokenRepository.delete(user.getId().toString());
+        });
+    }
+
     // 사용자 삭제
     @Transactional
     public DeleteResponse deleteUser(UUID userId, UUID requesterId) {
