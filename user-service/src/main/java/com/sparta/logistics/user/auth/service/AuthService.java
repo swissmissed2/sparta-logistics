@@ -13,6 +13,8 @@ import com.sparta.logistics.user.exception.UserErrorCode;
 import com.sparta.logistics.user.user.dto.response.ApproveResponse;
 import com.sparta.logistics.user.security.JwtUtil;
 import io.jsonwebtoken.Claims;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +33,9 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     // 회원가입
     @Transactional
     public UserResult signUp(SignupCommand command) {
@@ -47,6 +52,8 @@ public class AuthService {
         UserEntity user = command.toEntity(encodedPassword);
 
         // 첫 번째 가입자는 MASTER + APPROVED로 자동 설정
+        // Advisory lock으로 동시 요청 직렬화 (트랜잭션 종료 시 자동 해제)
+        entityManager.createNativeQuery("SELECT pg_advisory_xact_lock(1)").getResultList();
         if (!userRepository.existsAny()) {
             user.setRoleAndApprove();
         }
