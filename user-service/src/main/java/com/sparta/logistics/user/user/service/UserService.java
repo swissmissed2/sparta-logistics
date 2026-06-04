@@ -2,6 +2,7 @@ package com.sparta.logistics.user.user.service;
 
 import com.sparta.logistics.common.domain.Role;
 import com.sparta.logistics.common.exception.BusinessException;
+import com.sparta.logistics.user.auth.repository.RefreshTokenRepository;
 import com.sparta.logistics.user.user.entity.UserEntity;
 import com.sparta.logistics.user.user.enums.UserStatus;
 import com.sparta.logistics.user.user.repository.UserRepository;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     // 전체 조회
     public Page<GetResponse> getUsers(String username, String name, Role role, UserStatus status, Pageable pageable) {
@@ -66,6 +68,7 @@ public class UserService {
         UserEntity user = userRepository.findByIdAndDeletedAtIsNull(userId)
                 .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
         user.softDelete(requesterId);
+        refreshTokenRepository.delete(userId.toString());
         return DeleteResponse.from(user);
     }
 }
