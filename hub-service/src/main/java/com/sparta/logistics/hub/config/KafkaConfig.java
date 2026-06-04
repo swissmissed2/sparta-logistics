@@ -60,6 +60,9 @@ public class KafkaConfig {
         // 재시도 간격 1초
         config.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
 
+        // 재시도 시 중복 발행 방지
+        config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+
         return new DefaultKafkaProducerFactory<>(config);
     }
 

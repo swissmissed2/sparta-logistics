@@ -147,7 +147,7 @@ public class HubStockService {
                 compensateRestoredItems(succeededItems);
 
                 registerStockRestorationFailedEvent(
-                        command.getEventId(), command.getOrderId(), e.getMessage()
+                        command.getOrderId(), e.getMessage()
                 );
 
                 throw new KafkaSkipException("재고 복구 실패 - orderId: " + command.getOrderId());
@@ -155,7 +155,7 @@ public class HubStockService {
         }
 
         // DB 커밋 성공 후 ack 발행 (커밋 전 발행 시 정합성 문제 방지)
-        registerStockRestoredAckEvent(command.getEventId(), command.getOrderId());
+        registerStockRestoredAckEvent(command.getOrderId());
     }
 
     @Transactional
@@ -208,7 +208,6 @@ public class HubStockService {
                     event.getOrderId(), event.getSourceHubId(), event.getDestinationHubId());
             // 허브 조회 실패는 특정 상품과 무관하므로 productId null 반환
             registerStockReservationFailedEvent(
-                    event.getEventId(),
                     event.getOrderId(),
                     null,
                     e.getMessage()
@@ -217,24 +216,30 @@ public class HubStockService {
         }
 
 
-    // stock.reserved 발행 시 필요한 리스트
-    List<StockReservedItemPayload> reservedItems = new ArrayList<>();
+        // stock.reserved 발행 시 필요한 리스트
+        List<StockReservedItemPayload> reservedItems = new ArrayList<>();
 
-    List<OrderItemPayload> succeededItems = new ArrayList<>();
+        List<OrderItemPayload> succeededItems = new ArrayList<>();
 
         for (OrderItemPayload item : event.getOrderItems()) {
 
             // 낙관적 락으로 재고 예약 시도, 충돌 시 비관적 락으로 폴백
             try {
                 executeWithLock(
-                        () -> { hubStockLockHelper.reserveWithOptimisticLock(
-                                item.getHubId(), item.getProductId(),
-                                item.getQuantity(), item.getOrderItemId()
-                        ); return null; },
-                        () -> { hubStockLockHelper.reserveWithPessimisticLock(
-                                item.getHubId(), item.getProductId(),
-                                item.getQuantity(), item.getOrderItemId()
-                        ); return null; }
+                        () -> {
+                            hubStockLockHelper.reserveWithOptimisticLock(
+                                    item.getHubId(), item.getProductId(),
+                                    item.getQuantity(), item.getOrderItemId()
+                            );
+                            return null;
+                        },
+                        () -> {
+                            hubStockLockHelper.reserveWithPessimisticLock(
+                                    item.getHubId(), item.getProductId(),
+                                    item.getQuantity(), item.getOrderItemId()
+                            );
+                            return null;
+                        }
                 );
 
                 succeededItems.add(item);
@@ -248,34 +253,36 @@ public class HubStockService {
                 compensateReservedItems(succeededItems);
 
                 registerStockReservationFailedEvent(
-                        event.getEventId(), event.getOrderId(),
-                        item.getProductId(), e.getMessage()
+                        event.getOrderId(),
+                        item.getProductId(),
+                        e.getMessage()
                 );
 
                 throw new KafkaSkipException("재고 예약 실패 - orderId: " + event.getOrderId());
             }
 
-      reservedItems.add(StockReservedItemPayload.builder()
-          .orderItemId(item.getOrderItemId())
-          .productId(item.getProductId())
-          .reservedQuantity(item.getQuantity())
-          .sourceHubId(item.getHubId())
-          .build()
-      );
-    }
+            reservedItems.add(StockReservedItemPayload.builder()
+                    .orderItemId(item.getOrderItemId())
+                    .productId(item.getProductId())
+                    .reservedQuantity(item.getQuantity())
+                    .sourceHubId(item.getHubId())
+                    .build()
+            );
+        }
 
-    // DB 커밋 성공 후 stock.reserved 발행 (커밋 전 발행 시 정합성 문제 방지)
-    StockReservedEvent reservedEvent = StockReservedEvent.builder()
-        .eventId(event.getEventId())
-        .orderId(event.getOrderId())
-        .receiverId(event.getReceiverId())
-        .sourceHubId(event.getSourceHubId())
-        .destinationHubId(event.getDestinationHubId())
-        .deliveryAddress(event.getDeliveryAddress())
-        .orderItems(reservedItems)
-        .build();
-    registerStockReservedEvent(reservedEvent);
-  }
+        // DB 커밋 성공 후 stock.reserved 발행 (커밋 전 발행 시 정합성 문제 방지)
+
+        StockReservedEvent reservedEvent = StockReservedEvent.builder()
+                .eventId(UUID.randomUUID())
+                .orderId(event.getOrderId())
+                .receiverId(event.getReceiverId())
+                .sourceHubId(event.getSourceHubId())
+                .destinationHubId(event.getDestinationHubId())
+                .deliveryAddress(event.getDeliveryAddress())
+                .orderItems(reservedItems)
+                .build();
+        registerStockReservedEvent(reservedEvent);
+    }
 
     @Transactional
     public void deductReservedStock(DeliveryStartedEvent event) {
@@ -305,14 +312,14 @@ public class HubStockService {
     }
 
     // 재고 복구 실패 시 발행
-    private void registerStockRestorationFailedEvent(UUID eventId, UUID orderId, String reason) {
+    private void registerStockRestorationFailedEvent(UUID orderId, String reason) {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     // KafkaSkipException 발생 시 트랜잭션 롤백 → afterCommit() 미실행
                     // 롤백 후에도 실패 이벤트 발행이 필요하므로 afterCompletion 사용
                     @Override
                     public void afterCompletion(int status) {
-                        hubStockEventPublisher.publishStockRestorationFailed(eventId, orderId, reason);
+                        hubStockEventPublisher.publishStockRestorationFailed(orderId, reason);
                     }
                 }
         );
@@ -336,12 +343,12 @@ public class HubStockService {
         );
     }
 
-    private void registerStockRestoredAckEvent(UUID eventId, UUID orderId) {
+    private void registerStockRestoredAckEvent(UUID orderId) {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        hubStockEventPublisher.publishStockRestoredAck(eventId, orderId);
+                        hubStockEventPublisher.publishStockRestoredAck(orderId);
                     }
                 }
         );
@@ -358,13 +365,13 @@ public class HubStockService {
         );
     }
 
-    private void registerStockReservationFailedEvent(UUID eventId, UUID orderId, UUID productId, String reason) {
+    private void registerStockReservationFailedEvent(UUID orderId, UUID productId, String reason) {
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCompletion(int status) {
                         hubStockEventPublisher.publishStockReservationFailed(
-                                eventId, orderId, productId, reason
+                                orderId, productId, reason
                         );
                     }
                 }

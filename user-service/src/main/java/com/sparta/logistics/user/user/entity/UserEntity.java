@@ -101,6 +101,8 @@ public class UserEntity extends BaseEntity {
     public void setRoleAndApprove() {
         this.role = Role.MASTER;
         this.status = UserStatus.APPROVED;
+        this.hubId = null;
+        this.companyId = null;
     }
 
     public void reject(){

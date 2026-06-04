@@ -20,11 +20,11 @@ public class HubStockEventPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public void publishStockRestoredAck(UUID eventId, UUID orderId) {
+    public void publishStockRestoredAck(UUID orderId) {
 
         try {
             StockRestoredAckEvent event = StockRestoredAckEvent.builder()
-                    .eventId(eventId)
+                    .eventId(UUID.randomUUID())
                     .orderId(orderId)
                     .build();
 
@@ -46,11 +46,11 @@ public class HubStockEventPublisher {
         }
     }
 
-    public void publishStockReservationFailed(UUID eventId, UUID orderId, UUID productId, String reason) {
+    public void publishStockReservationFailed(UUID orderId, UUID productId, String reason) {
 
         try {
             StockReservationFailedEvent event = StockReservationFailedEvent.builder()
-                    .eventId(eventId)
+                    .eventId(UUID.randomUUID())
                     .orderId(orderId)
                     .productId(productId)
                     .reason(reason)
@@ -146,11 +146,11 @@ public class HubStockEventPublisher {
         }
     }
 
-    public void publishStockRestorationFailed(UUID eventId, UUID orderId, String reason) {
+    public void publishStockRestorationFailed(UUID orderId, String reason) {
 
         try {
             StockRestorationFailedEvent event = StockRestorationFailedEvent.builder()
-                    .eventId(eventId)
+                    .eventId(UUID.randomUUID())
                     .orderId(orderId)
                     .reason(reason)
                     .build();

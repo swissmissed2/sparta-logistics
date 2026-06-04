@@ -7,6 +7,7 @@ import com.sparta.logistics.common.kafka.event.DeliveryCreationFailedEvent;
 import com.sparta.logistics.common.kafka.event.DeliveryStartedEvent;
 import com.sparta.logistics.common.kafka.event.OrderCreatedEvent;
 import com.sparta.logistics.common.kafka.event.RestoreStockCommand;
+import com.sparta.logistics.common.outbox.EventDeduplicator;
 import com.sparta.logistics.hub.hubstock.service.HubStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class HubStockEventConsumer {
 
     private final ObjectMapper objectMapper;
     private final HubStockService hubStockService;
+    private final EventDeduplicator eventDeduplicator;
 
     /**
      * restore.stock.command 구독 — 주문 취소 시 재고 복구 (Orchestration 보상)
@@ -29,6 +31,11 @@ public class HubStockEventConsumer {
 
         try {
             RestoreStockCommand command = objectMapper.readValue(message, RestoreStockCommand.class);
+
+            // 중복 수신 방지 (at-least-once로 인한 재처리 차단)
+            if (eventDeduplicator.isDuplicate(command.getEventId(), KafkaTopics.RESTORE_STOCK_COMMAND)) {
+                return;
+            }
 
             log.info("[Kafka] restore.stock.command 수신 - orderId: {}", command.getOrderId());
 
@@ -49,6 +56,11 @@ public class HubStockEventConsumer {
             DeliveryCreationFailedEvent event = objectMapper
                     .readValue(message, DeliveryCreationFailedEvent.class);
 
+            // 중복 수신 방지 (at-least-once로 인한 재처리 차단)
+            if (eventDeduplicator.isDuplicate(event.getEventId(), KafkaTopics.DELIVERY_CREATION_FAILED)) {
+                return;
+            }
+
             log.info("[Kafka] delivery.creation.failed 수신 - orderId: {}", event.getOrderId());
 
             hubStockService.restoreOnDeliveryFailed(event);
@@ -66,6 +78,11 @@ public class HubStockEventConsumer {
 
         try {
             OrderCreatedEvent event = objectMapper.readValue(message, OrderCreatedEvent.class);
+
+            // 중복 수신 방지 (at-least-once로 인한 재처리 차단)
+            if (eventDeduplicator.isDuplicate(event.getEventId(), KafkaTopics.ORDER_CREATED)) {
+                return;
+            }
 
             log.info("[Kafka] order.created 수신 - orderId: {}", event.getOrderId());
 
@@ -85,6 +102,11 @@ public class HubStockEventConsumer {
         try {
             DeliveryStartedEvent event = objectMapper
                     .readValue(message, DeliveryStartedEvent.class);
+
+            // 중복 수신 방지 (at-least-once로 인한 재처리 차단)
+            if (eventDeduplicator.isDuplicate(event.getEventId(), KafkaTopics.DELIVERY_STARTED)) {
+                return;
+            }
 
             log.info("[Kafka] delivery.started 수신 - orderId: {}", event.getOrderId());
 
