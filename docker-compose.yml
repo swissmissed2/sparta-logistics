@@ -1,3 +1,9 @@
+x-app-depends: &app-depends
+  config-server:
+    condition: service_healthy
+  postgres:
+    condition: service_started
+
 services:
   # PostgreSQL
   postgres:
@@ -113,8 +119,6 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
-      discovery-server:
-        condition: service_started
     networks:
       - sparta-net
 
@@ -127,28 +131,14 @@ services:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_user
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: ${JWT_SECRET}
-      SERVER_PORT: 19091
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      redis:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
@@ -161,25 +151,13 @@ services:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_hub
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       REDIS_HOST: redis
-      SPRING_DATA_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
@@ -196,20 +174,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       REDIS_HOST: redis
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      redis:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
@@ -225,18 +192,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
@@ -249,27 +207,13 @@ services:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_order
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SERVER_PORT: 19095
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      redis:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
@@ -287,15 +231,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
@@ -311,21 +247,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       TEST_SLACK_ID: ${TEST_SLACK_ID}
-    depends_on:
-      config-server:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      postgres:
-        condition: service_started
-      kafka:
-        condition: service_started
+    depends_on: *app-depends
     networks:
       - sparta-net
 
