@@ -84,36 +84,50 @@ spring:
               uri: lb://user-service
               predicates:
                 - Path=/v3/api-docs/user
+              filters:
+                - RewritePath=/v3/api-docs/user, /v3/api-docs
 
             - id: hub-service-docs
               uri: lb://hub-service
               predicates:
                 - Path=/v3/api-docs/hub
+              filters:
+                - RewritePath=/v3/api-docs/hub, /v3/api-docs
 
             - id: company-service-docs
               uri: lb://company-service
               predicates:
                 - Path=/v3/api-docs/company
+              filters:
+                - RewritePath=/v3/api-docs/company, /v3/api-docs
 
             - id: product-service-docs
               uri: lb://product-service
               predicates:
                 - Path=/v3/api-docs/product
+              filters:
+                - RewritePath=/v3/api-docs/product, /v3/api-docs
 
             - id: order-service-docs
               uri: lb://order-service
               predicates:
                 - Path=/v3/api-docs/order
+              filters:
+                - RewritePath=/v3/api-docs/order, /v3/api-docs
 
             - id: delivery-service-docs
               uri: lb://delivery-service
               predicates:
                 - Path=/v3/api-docs/delivery
+              filters:
+                - RewritePath=/v3/api-docs/delivery, /v3/api-docs
 
             - id: slack-service-docs
               uri: lb://slack-service
               predicates:
                 - Path=/v3/api-docs/slack
+              filters:
+                - RewritePath=/v3/api-docs/slack, /v3/api-docs
 
 management:
   endpoints:
