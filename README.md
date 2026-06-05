@@ -23,7 +23,7 @@
 | user-service | 회원가입/로그인/사용자 관리 | 19091 |
 | hub-service | 허브/재고/경로 관리 | 19092 |
 | company-service | 업체 관리 | 19093 |
-| product-service | 상품 관리 | 19094 |
+| product-service | 상품 관리| 19094 |
 | order-service | 주문 관리, 취소 오케스트레이터 | 19095 |
 | delivery-service | 배송 생성/관리 | 19096 |
 | slack-service | Slack 알림, AI 발송 시한 계산 | 19097 |
@@ -98,13 +98,13 @@ docker compose ps
  docker compose up -d postgres redis zookeeper kafka zipkin
  ```
 
- 정상 기동 시 `sparta-postgres`, `sparta-redis`, `sparta-zookeeper`, `sparta-kafka`, `sparta-zipkin` 이 모두 `Up` 상태여야 합니다.
+ 정상 기동 시 `sparta-postgres`, `sparta-redis`, `sparta-zookeeper`, `sparta-kafka`, `sparta-zipkin` 이 모두 `Up` 상태여야 합니다. 
 
  이후 의존성 순서에 따라 서비스를 기동합니다.
 
  ```
- 1. config-server
- 2. discovery-server
+ 1. discovery-server
+ 2. config-server
  3. api-gateway
  4. 비즈니스 서비스 (순서 무관)
     user-service, company-service, hub-service,
@@ -128,7 +128,6 @@ docker compose ps
 | Eureka 대시보드 (서비스 등록 확인) | http://localhost:8761 |
 | API Gateway 헬스체크 | http://localhost:8080/actuator/health |
 | Zipkin 분산 추적 | http://localhost:9411 |
-| Swagger UI (Gateway 통합) | http://localhost:8080/swagger-ui.html |
 
 ### 5단계: 종료
 
