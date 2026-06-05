@@ -109,6 +109,7 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       JWT_SECRET: ${JWT_SECRET}
       JWT_SECRET_KEY: ${JWT_SECRET}
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -137,6 +138,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: ${JWT_SECRET}
       SERVER_PORT: 19091
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -169,6 +171,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       REDIS_HOST: redis
       SPRING_DATA_REDIS_HOST: redis
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -198,6 +201,7 @@ services:
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -228,6 +232,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -259,6 +264,7 @@ services:
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 19095
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -288,6 +294,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
     depends_on:
       config-server:
         condition: service_healthy
@@ -316,6 +323,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
       TEST_SLACK_ID: ${TEST_SLACK_ID}
