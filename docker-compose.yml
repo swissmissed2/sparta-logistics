@@ -170,14 +170,14 @@ services:
     build:
       context: ./hub-service
     container_name: sparta-hub-service
-    expose:
-      - "19092"
+    ports:
+      - "19092:19092"
     env_file:
       - .env
     environment:
       <<: *common-env
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_hub
-      REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on: *app-depends
     restart: unless-stopped
@@ -189,8 +189,8 @@ services:
     build:
       context: ./company-service
     container_name: sparta-company-service
-    expose:
-      - "19093"
+    ports:
+      - "19093:19093"
     env_file:
       - .env
     environment:
@@ -208,8 +208,8 @@ services:
     build:
       context: ./product-service
     container_name: sparta-product-service
-    expose:
-      - "19094"
+    ports:
+      - "19094:19094"
     env_file:
       - .env
     environment:
@@ -226,8 +226,8 @@ services:
     build:
       context: ./order-service
     container_name: sparta-order-service
-    expose:
-      - "19095"
+    ports:
+      - "19095:19095"
     env_file:
       - .env
     environment:
@@ -245,8 +245,8 @@ services:
     build:
       context: ./delivery-service
     container_name: sparta-delivery-service
-    expose:
-      - "19096"
+    ports:
+      - "19096:19096"
     env_file:
       - .env
     environment:
@@ -263,8 +263,8 @@ services:
     build:
       context: ./slack-service
     container_name: sparta-slack-service
-    expose:
-      - "19097"
+    ports:
+      - "19097:19097"
     env_file:
       - .env
     environment:
