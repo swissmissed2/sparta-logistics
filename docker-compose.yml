@@ -1,3 +1,14 @@
+x-app-depends: &app-depends
+  config-server:
+    condition: service_healthy
+  postgres:
+    condition: service_healthy
+
+x-common-env: &common-env
+  SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+  ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+
 services:
   # PostgreSQL
   postgres:
@@ -12,6 +23,13 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./scripts/init-schemas.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
     networks:
       - sparta-net
 
@@ -25,6 +43,7 @@ services:
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
       - redis-data:/data
+    restart: unless-stopped
     networks:
       - sparta-net
 
@@ -37,6 +56,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    restart: unless-stopped
     networks:
       - sparta-net
 
@@ -55,6 +75,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+    restart: unless-stopped
     networks:
       - sparta-net
 
@@ -64,6 +85,194 @@ services:
     container_name: sparta-zipkin
     ports:
       - "9411:9411"
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Discovery Server (Eureka)
+  discovery-server:
+    build:
+      context: ./discovery-server
+    container_name: sparta-discovery-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8761/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Config Server
+  config-server:
+    build:
+      context: ./config-server
+    container_name: sparta-config-server
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: sparta-api-gateway
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+    container_name: sparta-user-service
+    expose:
+      - "19091"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_user
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Hub Service
+  hub-service:
+    build:
+      context: ./hub-service
+    container_name: sparta-hub-service
+    ports:
+      - "19092:19092"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_hub
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Company Service
+  company-service:
+    build:
+      context: ./company-service
+    container_name: sparta-company-service
+    ports:
+      - "19093:19093"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_company
+      REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Product Service
+  product-service:
+    build:
+      context: ./product-service
+    container_name: sparta-product-service
+    ports:
+      - "19094:19094"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_product
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Order Service
+  order-service:
+    build:
+      context: ./order-service
+    container_name: sparta-order-service
+    ports:
+      - "19095:19095"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_order
+      REDIS_HOST: redis
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Delivery Service
+  delivery-service:
+    build:
+      context: ./delivery-service
+    container_name: sparta-delivery-service
+    ports:
+      - "19096:19096"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_delivery
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
+    networks:
+      - sparta-net
+
+  # Slack Service
+  slack-service:
+    build:
+      context: ./slack-service
+    container_name: sparta-slack-service
+    ports:
+      - "19097:19097"
+    env_file:
+      - .env
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=schema_slack
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on: *app-depends
+    restart: unless-stopped
     networks:
       - sparta-net
 
